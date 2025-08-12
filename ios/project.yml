@@ -1,0 +1,89 @@
+name: ResilientMe
+options:
+  minimumXcodeGenVersion: 2.37.0
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 10.0.0
+targets:
+  ResilientMe:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: ResilientMe
+    resources:
+      - path: ResilientMe/GoogleService-Info.plist
+      - path: ResilientMe/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.resilientme.app
+        SWIFT_VERSION: 5.9
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseFirestoreSwift
+      - package: Firebase
+        product: FirebaseStorage
+      - package: Firebase
+        product: FirebaseFunctions
+    info:
+      path: ResilientMe/Info.plist
+      properties:
+        CFBundleDisplayName: ResilientMe
+        CFBundleIdentifier: com.resilientme.app
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen:
+          UIColorName: "LaunchBackground"
+        UIUserInterfaceStyle: Dark
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+  ResilientMeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: ResilientMeTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.resilientme.app.tests
+    dependencies:
+      - target: ResilientMe
+  ResilientMeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: ResilientMeUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.resilientme.app.uitests
+    dependencies:
+      - target: ResilientMe
+schemes:
+  ResilientMe:
+    build:
+      targets:
+        ResilientMe: all
+    test:
+      targets:
+        - name: ResilientMeTests
+        - name: ResilientMeUITests
+    run:
+      config: Debug
+      environmentVariables:
+        FIREBASE_EMULATORS: "1"
+

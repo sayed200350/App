@@ -1,0 +1,46 @@
+import Foundation
+
+struct WeeklyStats {
+    let totalLogs: Int
+    let highImpact: Int
+    let averageImpact: Double
+}
+
+final class AnalyticsManager: ObservableObject {
+    @Published var currentResilienceScore: Double = 64
+    @Published var weeklyStats: WeeklyStats = .init(totalLogs: 0, highImpact: 0, averageImpact: 0)
+    @Published var timeframe: TimeFrame = .week
+    @Published var recoveryTrend: [TrendPoint] = []
+
+    func trackRejectionLogged(type: RejectionType) {
+        // TODO: hook to Firebase Analytics later
+        recalculate()
+    }
+
+    func recalculate() {
+        // compute off-main to keep UI smooth
+        let items = RejectionManager.shared.recent(days: timeframe.days)
+        let total = items.count
+        let high = items.filter { $0.emotionalImpact >= 7 }.count
+        let avg = items.map { $0.emotionalImpact }.reduce(0, +) / Double(max(1, total))
+        let trend = self.generateTrend(from: items)
+        DispatchQueue.main.async {
+            self.weeklyStats = .init(totalLogs: total, highImpact: high, averageImpact: avg)
+            self.currentResilienceScore = max(5, 100 - (avg * 7))
+            self.recoveryTrend = trend
+        }
+    }
+
+    private func generateTrend(from items: [RejectionEntry]) -> [TrendPoint] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: items) { calendar.startOfDay(for: $0.timestamp) }
+        let sortedDays = grouped.keys.sorted()
+        return sortedDays.map { day in
+            let dayItems = grouped[day] ?? []
+            let avg = dayItems.map { $0.emotionalImpact }.reduce(0, +) / Double(max(1, dayItems.count))
+            return TrendPoint(date: day, value: avg)
+        }
+    }
+}
+
+

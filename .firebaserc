@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "resilientme-staging",
+    "staging": "resilientme-staging",
+    "production": "resilientme-prod"
+  }
+}

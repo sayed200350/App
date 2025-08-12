@@ -1,0 +1,429 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize SwiftUI project and base structure",
+        "description": "Create SwiftUI app (iOS 15+), set dark theme, organize folders (Models, Views, ViewModels, Services, CoreData, Utils).",
+        "details": "- New Xcode project `ResilientMe`\n- Minimum iOS 15.0\n- App uses SwiftUI lifecycle\n- Create base groups and empty files for structure\n- App launches to placeholder view",
+        "testStrategy": "Build succeeds and app launches to a placeholder screen under 2s",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Configure Firebase (Auth, Firestore, Analytics)",
+        "description": "Integrate Firebase SDKs with Swift Package Manager. Set up environments, plist, and basic Auth.",
+        "details": "- Add Firebase via SPM: Auth, Firestore, Analytics\n- Add GoogleService-Info.plist (Dev)\n- Initialize Firebase at launch\n- Implement anonymous + email auth flows (stubs)",
+        "testStrategy": "Firebase initializes successfully; analytics events log; anonymous sign-in returns a user",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Setup Core Data stack and model",
+        "description": "Create Core Data model for `RejectionEntry` and Core Data stack service.",
+        "details": "- Data model with fields per brief (type, impact, note, timestamp, location, imageData, isRecovered, recoveryTime)\n- NSPersistentContainer setup\n- CRUD helpers",
+        "testStrategy": "Create and fetch sample entries in a preview test",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement RejectionManager and models",
+        "description": "Domain model and manager to log and fetch rejections, compute basics.",
+        "details": "- Swift model enums/types\n- `RejectionManager` APIs: save, fetchRecent, fetchHighImpact\n- Integrate with Core Data service",
+        "testStrategy": "Unit tests: saving and fetching entries works",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Build Quick Log UI (`RejectionLogView`)",
+        "description": "Primary logging screen per brief with type buttons, impact slider, note, photo attach stub.",
+        "details": "- Rejection type grid buttons\n- Impact slider (1-10) with emoji feedback\n- Optional note textfield\n- Photo add button (stub)\n- Log button calling manager",
+        "testStrategy": "Manual UI test: create an entry in under 30 seconds",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Dashboard MVP (counts + resilience score placeholder)",
+        "description": "Create dashboard screen with resilience ring, weekly stats, and placeholders.",
+        "details": "- `DashboardView` with score ring\n- Weekly counts and simple trends placeholders\n- Timeframe segmented control",
+        "testStrategy": "UI renders with sample data; no crashes",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "PatternAnalyzer basic rules",
+        "description": "Implement initial pattern detection per brief (ghosting keyword, day of week, recovery improvement).",
+        "details": "- Detect ghosting keyword frequency in dating notes\n- Detect day-of-week spikes\n- Detect recovery time improvements",
+        "testStrategy": "Unit tests with synthetic datasets",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Recovery Hub baseline",
+        "description": "Contextual recovery content by rejection type with 5-minute plan.",
+        "details": "- `RecoveryHubView` and `RecoveryPlanCard`\n- `QuickRecoveryActions`\n- Static content mapped by type",
+        "testStrategy": "Renders for each type; content loads instantly",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Daily Challenge system MVP",
+        "description": "Personalized challenge generator based on recent rejections and resilience level.",
+        "details": "- `ChallengeManager`\n- `ChallengeView` with streak and actions\n- Persistence of completion and streak in UserDefaults",
+        "testStrategy": "Unit test: generation logic varies by input; streak increments",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Notifications: permission + daily check-in",
+        "description": "Request notifications and schedule daily check-ins and recovery follow-ups.",
+        "details": "- `NotificationManager`\n- Daily 8 PM reminder\n- 24h follow-up for high-impact entries",
+        "testStrategy": "Local notifications fire in simulator with debug triggers",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Privacy features: biometric lock + anonymous mode",
+        "description": "Implement biometric gate and anonymous mode setting.",
+        "details": "- `PrivacyManager` with LAContext auth\n- AppStorage flags\n- Gate sensitive sections",
+        "testStrategy": "Biometric toggle works; gate denies when not authenticated",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Testing scaffolding and key tests",
+        "description": "Add unit and UI test targets; write tests for logging, patterns, score.",
+        "details": "- Unit test target with sample tests\n- UI test for 30-sec Quick Log flow\n- CI-ready fast tests",
+        "testStrategy": "All tests pass locally",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Anonymous Community MVP",
+        "description": "Implement anonymous story feed with reactions and simple submission.",
+        "details": "- `CommunityView` with filter pills and list\n- `CommunityStoryCard` with reactions (support, relate, celebrate, hug)\n- `StorySubmissionView` (anonymous, sanitized)\n- Backend stubs using Firestore collections",
+        "testStrategy": "Stories load and can be submitted; reactions increment",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Advanced Analytics & Charts",
+        "description": "Add Charts-based visualizations for trends and recovery time.",
+        "details": "- `RecoveryTrendsChart` using Charts (iOS 16+)\n- Weekly stats card with sparklines\n- Guard availability for iOS 15 devices",
+        "testStrategy": "Charts render with sample data; 15.0 displays fallback",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Biometric security polish",
+        "description": "Finalize biometric lock flows and gating across sensitive views.",
+        "details": "- Lock screen overlay and unlock prompt\n- Settings toggle with LAContext checks\n- Graceful fallback to passcode",
+        "testStrategy": "Lock prevents access until authenticated; state persists",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "App Store readiness (ASO)",
+        "description": "Prepare metadata, screenshots, and build settings for TestFlight.",
+        "details": "- App icons, launch screen\n- Product page: description, keywords, privacy manifest\n- TestFlight setup checklist",
+        "testStrategy": "Archive succeeds; TestFlight build processed",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Accessibility AA compliance",
+        "description": "Implement accessibility features per WCAG 2.1 AA.",
+        "details": "- VoiceOver labels and traits\n- Dynamic Type and contrast checks\n- Keyboard navigation review (iPad)",
+        "testStrategy": "Xcode Accessibility Inspector passes; manual VoiceOver checks",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Performance optimization pass",
+        "description": "Meet performance targets: cold start <2s, low memory.",
+        "details": "- Lazy loads, image compression, caching\n- Reduce observers and heavy work on main thread\n- Metrics with os_signpost",
+        "testStrategy": "Measure with Instruments; targets met on iPhone 12+",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Legal, privacy, and crisis resources in-app",
+        "description": "Add disclaimers, privacy links, and crisis resources.",
+        "details": "- Settings > About: Privacy Policy, Terms links\n- Mental health disclaimer\n- Crisis hotlines by region (static list)",
+        "testStrategy": "Links open; content readable and accessible",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Design system setup",
+        "description": "Implement color palette, typography, and base components.",
+        "details": "- Color assets per brief\n- Font styles extension\n- `ResilientButton`, card surfaces, spacing system",
+        "testStrategy": "UI matches design tokens; reusable components used",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Setup Firebase staging project + Emulator Suite",
+        "description": "Create staging Firebase project and local Emulator Suite for Auth/Firestore/Functions/Storage.",
+        "details": "- Create Firebase project 'resilientme-staging'\n- Enable Auth (Email link, Anonymous), Firestore, Storage, FCM\n- Initialize repo configs: .firebaserc, firebase.json, firestore.indexes.json, firestore.rules\n- Configure Emulator Suite ports and UI\n- Add staging GoogleService-Info.plist and switchable build config",
+        "testStrategy": "Emulators boot, sample read/write works, app points to staging plist and connects",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Firestore Security Rules v1 + tests",
+        "description": "Write least-privilege rules for users/*, community/* and Storage; add emulator tests.",
+        "details": "- Rules for user-owned docs, community read-only with guarded writes\n- Storage rules for user images\n- Jest/mocha emulator tests for allow/deny cases",
+        "testStrategy": "All rule tests pass in Emulator Suite; writes denied/allowed as expected",
+        "status": "pending",
+        "dependencies": [21],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Cloud Functions: rejections aggregate + follow-up notifications",
+        "description": "Implement onCreate trigger to update aggregates, recompute resilience score, and schedule follow-up notifications.",
+        "details": "- onCreate users/{uid}/rejections/{id}\n- Update daily/weekly aggregate docs\n- Compute resilience score\n- Schedule 24h follow-up (FCM)",
+        "testStrategy": "Function unit tests with emulator; aggregates updated; notification enqueued",
+        "status": "pending",
+        "dependencies": [21,22],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "iOS Repositories + offline queue (CoreData <-> Firestore)",
+        "description": "Introduce repository layer and background sync queue for offline-first operations.",
+        "details": "- Repository protocol + Firestore/Local implementations\n- Sync engine: backoff, retry, conflict policy\n- Unit tests for sync edge cases",
+        "testStrategy": "Offline logs enqueue and sync when online; conflicts resolved predictably",
+        "status": "pending",
+        "dependencies": [21,22,23],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Storage upload for rejection images + access rules",
+        "description": "Allow attaching images to rejections and upload to Storage with secure paths.",
+        "details": "- Image picker + compression\n- Upload to storage path rejection_images/{uid}/{id}.jpg\n- Store imageRef in Firestore",
+        "testStrategy": "Image uploads succeed; access denied across users; image shown in History",
+        "status": "pending",
+        "dependencies": [22],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Server pattern detection + dashboard integration",
+        "description": "Move pattern analysis to Functions and expose snapshots for dashboard.",
+        "details": "- Batch/triggered analysis writes patterns to users/{uid}/aggregates or patterns collection\n- Client reads server patterns; client calc only as fallback",
+        "testStrategy": "Patterns appear after new logs; UI shows server-sourced items",
+        "status": "pending",
+        "dependencies": [23],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Community moderation + report flow",
+        "description": "Moderate posts via external API; implement report and hide flows.",
+        "details": "- Callable/trigger to run Perspective (or similar)\n- Set status hidden if unsafe\n- Report subcollection and UI action",
+        "testStrategy": "Unsafe posts hidden; report increments; rules prevent abuse",
+        "status": "pending",
+        "dependencies": [21,22],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Callable reactToPost with dedupe + rate limiting",
+        "description": "Wrap reactions in a callable to atomically update counts and dedupe per user.",
+        "details": "- reactToPost callable updates reactions map atomically\n- Store userReactions/{uid} marker\n- Basic rate limit via per-user counters",
+        "testStrategy": "Multiple taps don't double-count; limits enforced in emulator tests",
+        "status": "pending",
+        "dependencies": [21,22],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Scheduled daily challenges generator + client fetch",
+        "description": "Generate challenges nightly per user based on patterns and level.",
+        "details": "- Scheduled function writes users/{uid}/challenges/{date}\n- Client fetch and completion writes back",
+        "testStrategy": "Challenge exists each morning; completion increments streak",
+        "status": "pending",
+        "dependencies": [21,23],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "FCM integration (token register, opens) + functions schedule",
+        "description": "Register device tokens, handle notification taps, schedule reminders via Functions.",
+        "details": "- Save token under users/{uid}\n- Handle deep-links from notifications\n- Verify schedules in emulator",
+        "testStrategy": "Token registered; push received; open tracked; schedules fire in emulator",
+        "status": "pending",
+        "dependencies": [21,23],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Remote Config flags + client gates",
+        "description": "Add feature flags and wire client checks for gradual rollout.",
+        "details": "- Flags: communityEnabled, challengeDifficulty, copyVariants\n- Client fetch/activate; guard views",
+        "testStrategy": "Flags toggle features without new build",
+        "status": "pending",
+        "dependencies": [21],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Analytics taxonomy GA4 + event wiring",
+        "description": "Define analytics schema and wire events across app.",
+        "details": "- Events: rejection_log, challenge_complete, community_post, reaction_add, notification_open\n- Parameter schema and validation",
+        "testStrategy": "Events visible in DebugView; params as designed",
+        "status": "pending",
+        "dependencies": [21],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Sentry crash/error reporting",
+        "description": "Integrate Sentry SDK for crash and error capture.",
+        "details": "- Initialize Sentry in app\n- Capture handled errors in repositories\n- DSN per environment",
+        "testStrategy": "Test crashes/errors visible in Sentry for staging",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Data export/delete callables + UI triggers",
+        "description": "Implement account data export and deletion per compliance.",
+        "details": "- Callables to package export and scrub PII\n- Settings UI to request export/delete\n- Email/notification on completion",
+        "testStrategy": "Requests succeed in staging; export delivered; delete removes PII",
+        "status": "pending",
+        "dependencies": [21,22],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "CI: Fastlane + GitHub Actions with Emulator tests",
+        "description": "Automate build, test (emulators), and distribution.",
+        "details": "- Fastlane lanes: test, beta\n- GitHub Actions: run unit/UI + emulator integration\n- Cache and secrets configured",
+        "testStrategy": "CI green on PR; artifacts produced; beta upload works",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "ASO prep: icons, metadata, privacy manifest",
+        "description": "Prepare store assets and privacy disclosures.",
+        "details": "- App icons, screenshots, copy\n- Privacy Nutrition Labels\n- Keywords and tagline",
+        "testStrategy": "Archive builds; assets validated by App Store Connect",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Release pipeline: TestFlight gating & staged rollout",
+        "description": "Configure phased releases and TestFlight groups.",
+        "details": "- Internal/External testing groups\n- Staged rollout via Remote Config + phased release",
+        "testStrategy": "Build visible to testers; rollout controls verified",
+        "status": "pending",
+        "dependencies": [35],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 38,
+        "title": "Migration: batch upload local Core Data on sign-in",
+        "description": "On first sign-in, upload locally stored rejections to Firestore, then mark migrated.",
+        "details": "- Detect unmigrated local entries\n- Batch write to Firestore under user\n- Idempotency markers",
+        "testStrategy": "Local entries appear in cloud after sign-in; safe on re-run",
+        "status": "pending",
+        "dependencies": [24],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-12T12:00:25.367Z",
+      "description": "Default tasks context",
+      "updated": "2025-08-12T18:40:26.235Z"
+    }
+  }
+}
