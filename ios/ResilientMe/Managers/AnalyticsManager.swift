@@ -1,5 +1,9 @@
 import Foundation
 
+#if canImport(FirebaseAnalytics)
+import FirebaseAnalytics
+#endif
+
 struct WeeklyStats {
     let totalLogs: Int
     let highImpact: Int
@@ -13,7 +17,11 @@ final class AnalyticsManager: ObservableObject {
     @Published var recoveryTrend: [TrendPoint] = []
 
     func trackRejectionLogged(type: RejectionType) {
-        // TODO: hook to Firebase Analytics later
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent("rejection_log", parameters: [
+            "type": type.rawValue
+        ])
+        #endif
         recalculate()
     }
 

@@ -3,6 +3,9 @@ import UIKit
 #if canImport(FirebaseCore)
 import FirebaseCore
 #endif
+#if canImport(FirebaseMessaging)
+import FirebaseMessaging
+#endif
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     var window: UIWindow?
@@ -21,9 +24,29 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             print("[Firebase] GoogleService-Info.plist missing or invalid. Skipping FirebaseApp.configure().")
         }
 #endif
+#if canImport(FirebaseMessaging)
+        Messaging.messaging().delegate = self
+#endif
         PerformanceMetrics.end("App Launch Configure", id: id)
         return true
     }
+
+#if canImport(FirebaseMessaging)
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+        // Attempt to register token to backend when available
+        NotificationManager.shared.registerFCMToken()
+    }
+#endif
 }
+
+#if canImport(FirebaseMessaging)
+extension AppDelegate: MessagingDelegate {
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        // Persist or send token to backend
+        NotificationManager.shared.registerFCMToken()
+    }
+}
+#endif
 
 

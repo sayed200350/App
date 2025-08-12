@@ -3,6 +3,9 @@ import Foundation
 #if canImport(FirebaseFirestore)
 import FirebaseFirestore
 #endif
+#if canImport(FirebaseAnalytics)
+import FirebaseAnalytics
+#endif
 
 struct CommunityStory: Identifiable, Codable {
     let id: String
@@ -58,6 +61,9 @@ final class CommunityManager: ObservableObject {
         let key = reaction.rawValue
         ref.setData(["reactions.\(key)": FieldValue.increment(Int64(1))], merge: true)
         #endif
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent("reaction_add", parameters: ["reaction": reaction.rawValue])
+        #endif
     }
 
     func submitStory(type: RejectionType, content: String) async throws {
@@ -68,9 +74,13 @@ final class CommunityManager: ObservableObject {
             "type": type.rawValue,
             "content": content,
             "createdAt": Timestamp(date: Date()),
-            "reactions": [:]
+            "reactions": [:],
+            "authorUid": FirebaseManager.shared.currentUser?.uid as Any
         ]
         _ = try await db.collection("community").addDocument(data: payload)
+        #endif
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent("community_post", parameters: ["type": type.rawValue])
         #endif
     }
 }

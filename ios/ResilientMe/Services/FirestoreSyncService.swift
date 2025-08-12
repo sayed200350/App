@@ -28,6 +28,16 @@ final class FirestoreSyncService {
         }
         #endif
     }
+
+    func attachImage(entryId: UUID, imageUrl: String) {
+        #if canImport(FirebaseFirestore)
+        guard FirebaseManager.shared.isConfigured else { return }
+        guard let uid = FirebaseManager.shared.currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        let doc = db.collection("users").document(uid).collection("rejections").document(entryId.uuidString)
+        doc.setData(["imageUrl": imageUrl], merge: true)
+        #endif
+    }
 }
 
 

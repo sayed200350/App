@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RejectionLogView: View {
+    @EnvironmentObject private var analyticsManager: AnalyticsManager
     @State private var rejectionType: RejectionType = .dating
     @State private var emotionalImpact: Double = 5
     @State private var note: String = ""
@@ -66,10 +67,13 @@ struct RejectionLogView: View {
             timestamp: Date()
         )
         RejectionManager.shared.save(entry: entry)
+        analyticsManager.trackRejectionLogged(type: rejectionType)
         if let image = image {
             Task {
                 let path = "rejection_images/\(FirebaseManager.shared.currentUser?.uid ?? "local")/\(entry.id).jpg"
-                _ = try? await ImageUploadService.shared.uploadImage(image, path: path)
+                if let url = try? await ImageUploadService.shared.uploadImage(image, path: path) {
+                    FirestoreSyncService.shared.attachImage(entryId: entry.id, imageUrl: url)
+                }
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -93,6 +97,7 @@ struct RejectionLogView: View {
 struct RejectionLogView_Previews: PreviewProvider {
     static var previews: some View {
         RejectionLogView()
+            .environmentObject(AnalyticsManager())
     }
 }
 
