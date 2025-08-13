@@ -55,6 +55,8 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to choose a screenshot to attach to a log.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>We use analytics to improve your experience. You can opt out at any time.</string>
 	<key>FirebaseMessagingAutoInitEnabled</key>
