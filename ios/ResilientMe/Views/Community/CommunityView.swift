@@ -19,19 +19,30 @@ struct CommunityView: View {
                     .padding(.horizontal)
                 }
 
-                List {
-                    ForEach(manager.getStories(filter: selectedFilter)) { story in
-                        CommunityStoryCard(story: story) { reaction in
-                            manager.addReaction(to: story, reaction: reaction)
-                            AnalyticsManager.trackReactionAdd(reaction)
-                        }
-                        .swipeActions {
-                            Button(role: .destructive) { manager.report(story: story) } label: { Label("Report", systemImage: "exclamationmark.triangle") }
+                if manager.getStories(filter: selectedFilter).isEmpty {
+                    VStack(spacing: 12) {
+                        Text("No stories yet.").font(.resilientHeadline)
+                        Text("Share your first story. Someone will relate.").font(.resilientBody).foregroundColor(.secondary)
+                        ResilientButton(title: "Share a story", style: .primary) { showingSubmission = true }
+                    }
+                    .padding()
+                } else {
+                    List {
+                        ForEach(manager.getStories(filter: selectedFilter)) { story in
+                            CommunityStoryCard(story: story) { reaction in
+                                // optimistic UI
+                                Haptics.light()
+                                manager.addReaction(to: story, reaction: reaction)
+                                AnalyticsManager.trackReactionAdd(reaction)
+                            }
+                            .swipeActions {
+                                Button(role: .destructive) { manager.report(story: story) } label: { Label("Report", systemImage: "exclamationmark.triangle") }
+                            }
                         }
                     }
+                    .listStyle(.plain)
+                    .refreshable { await manager.loadStories() }
                 }
-                .listStyle(.plain)
-                .refreshable { await manager.loadStories() }
                 }
                 .navigationTitle("Community")
                 .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Share") { showingSubmission = true } } }

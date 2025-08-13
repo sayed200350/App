@@ -9,13 +9,14 @@ struct RejectionLogView: View {
     @State private var note: String = ""
     @State private var isSaving: Bool = false
     @State private var image: UIImage? = nil
+    @State private var showSuccess: Bool = false
 
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
                     ForEach(RejectionType.allCases) { type in
-                        Button(action: { rejectionType = type }) {
+                        Button(action: { rejectionType = type; Haptics.light() }) {
                             Text(type.rawValue)
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
@@ -51,6 +52,16 @@ struct RejectionLogView: View {
                 .disabled(isSaving)
                 .accessibilityLabel(isSaving ? "Logging" : "Log rejection")
 
+                if showSuccess {
+                    Text("Logged. That’s strength.")
+                        .font(.footnote)
+                        .padding(8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green.opacity(0.15))
+                        .cornerRadius(8)
+                        .transition(.opacity)
+                }
+
                 Spacer()
             }
             .padding()
@@ -85,6 +96,9 @@ struct RejectionLogView: View {
         }
         #endif
         AnalyticsManager.trackRejectionLogged(type: rejectionType)
+        Haptics.success()
+        withAnimation { showSuccess = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { withAnimation { showSuccess = false } }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             isSaving = false
             note = ""
