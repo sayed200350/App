@@ -5,6 +5,12 @@ on:
     branches: [ main, develop, '**' ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      beta:
+        description: 'Run beta lane'
+        required: false
+        default: 'false'
 
 jobs:
   functions-tests:
@@ -34,3 +40,36 @@ jobs:
         shell: bash
         env:
           NSUnbufferedIO: YES
+
+  ios-fastlane-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler and Fastlane
+        run: |
+          gem install bundler fastlane
+      - name: Run Fastlane test
+        working-directory: ios
+        run: fastlane test
+
+  ios-fastlane-beta:
+    if: ${{ github.event.inputs.beta == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler and Fastlane
+        run: |
+          gem install bundler fastlane
+      - name: Run Fastlane beta
+        working-directory: ios
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: fastlane beta

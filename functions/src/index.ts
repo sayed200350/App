@@ -45,6 +45,33 @@ const rateLimitCheck = async (uid: string, key: string, limit: number, windowSec
   });
 };
 
+// Scheduled cleanup for stale rateLimits and userReactions older than 7 days
+export const cleanupStaleDocs = functions.pubsub.schedule('every 24 hours').timeZone('Etc/UTC').onRun(async () => {
+  const sevenDaysAgo = admin.firestore.Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const batch = db.batch();
+  let count = 0;
+  // rateLimits: use windowStart timestamp
+  const rlSnap = await db.collection('rateLimits').get();
+  rlSnap.forEach((d) => {
+    const data = d.data() as any;
+    const ws: admin.firestore.Timestamp | undefined = data.windowStart;
+    if (ws && ws.seconds < sevenDaysAgo.seconds) {
+      batch.delete(d.ref); count++;
+    }
+  });
+  // userReactions: use createdAt
+  const urSnap = await db.collection('userReactions').get();
+  urSnap.forEach((d) => {
+    const data = d.data() as any;
+    const ca: admin.firestore.Timestamp | undefined = data.createdAt;
+    if (ca && ca.seconds < sevenDaysAgo.seconds) {
+      batch.delete(d.ref); count++;
+    }
+  });
+  if (count > 0) { await batch.commit(); }
+  return null;
+});
+
 // Backfill: set status: 'visible' where missing on recent community posts (admin only)
 export const backfillCommunityStatus = functions.https.onCall(async (_data, context) => {
   ensureAdmin(context);
