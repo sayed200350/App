@@ -12,8 +12,10 @@ struct CommunityView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         FilterPill(title: "All", isSelected: selectedFilter == nil) { selectedFilter = nil }
+                            .accessibilityLabel("Filter All")
                         ForEach(RejectionType.allCases) { type in
                             FilterPill(title: type.displayTitle, isSelected: selectedFilter == type) { selectedFilter = type }
+                                .accessibilityLabel("Filter \(type.displayTitle)")
                         }
                     }
                     .padding(.horizontal)
@@ -97,6 +99,7 @@ struct CommunityStoryCard: View {
                             Text("\(story.reactions[r] ?? 0)").font(.caption)
                         }
                     }
+                    .accessibilityLabel(Text("Add reaction \(r.accessibilityLabel)"))
                 }
                 Spacer()
             }
