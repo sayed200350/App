@@ -1,0 +1,38 @@
+name: Firebase Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Firebase target: default|staging|production'
+        required: false
+        default: 'default'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Functions deps
+        working-directory: functions
+        run: npm ci
+      - name: Build Functions
+        working-directory: functions
+        run: npm run build
+      - name: Firebase deploy (rules, indexes, functions)
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npm i -g firebase-tools
+          if [ "${{ github.event.inputs.target }}" = "production" ]; then
+            firebase use production
+          elif [ "${{ github.event.inputs.target }}" = "staging" ]; then
+            firebase use staging
+          else
+            firebase use default
+          fi
+          firebase deploy --only firestore:rules,firestore:indexes,functions
