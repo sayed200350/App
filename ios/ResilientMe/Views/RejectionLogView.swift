@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 struct RejectionLogView: View {
     @State private var rejectionType: RejectionType = .dating
@@ -66,12 +69,20 @@ struct RejectionLogView: View {
             timestamp: Date()
         )
         RejectionManager.shared.save(entry: entry)
-        if let image = image {
-            Task {
-                let path = "rejection_images/\(FirebaseManager.shared.currentUser?.uid ?? "local")/\(entry.id).jpg"
-                _ = try? await ImageUploadService.shared.uploadImage(image, path: path)
+        #if canImport(FirebaseFirestore)
+        if FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid {
+            let db = Firestore.firestore()
+            let doc = db.collection("users").document(uid).collection("rejections").document(entry.id.uuidString)
+            if let image = image {
+                Task {
+                    if let url = try? await ImageUploadService.shared.uploadImage(image, path: "rejection_images/\(uid)/\(entry.id).jpg") {
+                        doc.setData(["imageUrl": url], merge: true)
+                    }
+                }
             }
         }
+        #endif
+        AnalyticsManager.trackRejectionLogged(type: rejectionType)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             isSaving = false
             note = ""

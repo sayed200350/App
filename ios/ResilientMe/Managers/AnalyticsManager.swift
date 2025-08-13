@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FirebaseAnalytics)
+import FirebaseAnalytics
+#endif
 
 struct WeeklyStats {
     let totalLogs: Int
@@ -12,29 +15,39 @@ final class AnalyticsManager: ObservableObject {
     @Published var timeframe: TimeFrame = .week
     @Published var recoveryTrend: [TrendPoint] = []
 
-    func trackRejectionLogged(type: RejectionType) {
-        // TODO: hook to Firebase Analytics later (event: rejection_log)
-        recalculate()
+    // MARK: - Tracking
+    static func logEvent(_ name: String, params: [String: Any]? = nil) {
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent(name, parameters: params)
+        #endif
     }
 
-    func trackChallengeComplete() {
-        // TODO: event: challenge_complete
+    static func trackRejectionLogged(type: RejectionType) {
+        logEvent("rejection_log", params: ["type": type.rawValue])
     }
 
-    func trackCommunityPost() {
-        // TODO: event: community_post
+    static func trackChallengeComplete() {
+        logEvent("challenge_complete")
     }
 
-    func trackReactionAdd() {
-        // TODO: event: reaction_add
+    static func trackChallengeSkip() {
+        logEvent("challenge_skip")
     }
 
-    func trackScreenView(_ name: String) {
-        // TODO: event: screen_view
+    static func trackCommunityPost() {
+        logEvent("community_post")
     }
 
+    static func trackReactionAdd(_ reaction: Reaction) {
+        logEvent("reaction_add", params: ["reaction": reaction.rawValue])
+    }
+
+    static func trackScreenView(_ name: String) {
+        logEvent(AnalyticsEventScreenView, params: [AnalyticsParameterScreenName: name])
+    }
+
+    // MARK: - Derived metrics
     func recalculate() {
-        // compute off-main to keep UI smooth
         let items = RejectionManager.shared.recent(days: timeframe.days)
         let total = items.count
         let high = items.filter { $0.emotionalImpact >= 7 }.count

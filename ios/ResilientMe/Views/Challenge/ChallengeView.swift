@@ -28,9 +28,11 @@ struct ChallengeView: View {
                     HStack {
                         ResilientButton(title: "Complete", style: .primary) {
                             manager.markCompleted(c)
+                            AnalyticsManager.trackChallengeComplete()
                             loadChallenge()
                         }
                         ResilientButton(title: "Skip", style: .secondary) {
+                            AnalyticsManager.trackChallengeSkip()
                             loadChallenge()
                         }
                     }

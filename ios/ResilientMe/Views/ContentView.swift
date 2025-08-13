@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Binding var selectedTab: Int
+    @StateObject private var rc = RemoteConfigManager()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -29,11 +30,13 @@ struct ContentView: View {
                 }
                 .tag(3)
 
-            CommunityView()
-                .tabItem {
-                    Label("Community", systemImage: "person.3.fill")
-                }
-                .tag(4)
+            if rc.communityEnabled {
+                CommunityView()
+                    .tabItem {
+                        Label("Community", systemImage: "person.3.fill")
+                    }
+                    .tag(4)
+            }
 
             HistoryView()
                 .tabItem {
@@ -47,6 +50,7 @@ struct ContentView: View {
                 }
                 .tag(6)
         }
+        .onAppear { rc.fetchAndActivate() }
     }
 }
 

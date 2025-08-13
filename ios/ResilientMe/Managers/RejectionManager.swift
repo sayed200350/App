@@ -28,6 +28,18 @@ final class RejectionManager: ObservableObject {
         FirestoreSyncService.shared.save(entry: entry)
     }
 
+    func delete(id: UUID) {
+        let bg = CoreDataStack.shared.newBackgroundContext()
+        bg.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "RejectionCD")
+            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            if let results = try? bg.fetch(request) {
+                for obj in results { bg.delete(obj) }
+                do { try bg.save() } catch { print("Core Data delete error: \(error)") }
+            }
+        }
+    }
+
     func recent(days: Int) -> [RejectionEntry] {
         let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let request = NSFetchRequest<NSManagedObject>(entityName: "RejectionCD")

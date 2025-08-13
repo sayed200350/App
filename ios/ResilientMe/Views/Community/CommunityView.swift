@@ -23,6 +23,7 @@ struct CommunityView: View {
                     ForEach(manager.getStories(filter: selectedFilter)) { story in
                         CommunityStoryCard(story: story) { reaction in
                             manager.addReaction(to: story, reaction: reaction)
+                            AnalyticsManager.trackReactionAdd(reaction)
                         }
                         .swipeActions {
                             Button(role: .destructive) { manager.report(story: story) } label: { Label("Report", systemImage: "exclamationmark.triangle") }
@@ -35,7 +36,7 @@ struct CommunityView: View {
                 .navigationTitle("Community")
                 .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Share") { showingSubmission = true } } }
                 .sheet(isPresented: $showingSubmission) { StorySubmissionView(onSubmit: { type, text in
-                    Task { try? await manager.submitStory(type: type, content: text); await manager.loadStories() }
+                    Task { try? await manager.submitStory(type: type, content: text); AnalyticsManager.trackCommunityPost(); await manager.loadStories() }
                 }) }
                 .onAppear { Task { await manager.loadStories() } }
             }
