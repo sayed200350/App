@@ -10,6 +10,14 @@ struct RecoveryHubView: View {
                     if let rejection = last {
                         RecoveryPlanCard(rejectionType: rejection.type)
                         QuickRecoveryActions(rejectionType: rejection.type)
+                        NavigationLink("Response Templates") {
+                            ResponseTemplatesView(rejectionType: rejection.type)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     } else {
                         Text("No recent rejections. Log one to get a tailored recovery plan.")
                             .font(.resilientBody)
@@ -22,6 +30,8 @@ struct RecoveryHubView: View {
             .navigationTitle("Recovery Hub")
             .onAppear { last = RejectionManager.shared.recent(days: 30).first }
         }
+        .background(Color.resilientBackground.ignoresSafeArea())
+        .onAppear { AnalyticsManager.trackScreenView("Recovery") }
     }
 }
 

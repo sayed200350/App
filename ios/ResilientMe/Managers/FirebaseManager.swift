@@ -7,6 +7,12 @@ import FirebaseCore
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
+#if canImport(FirebaseMessaging)
+import FirebaseMessaging
+#endif
 
 struct AppUser {
     let uid: String
@@ -48,6 +54,7 @@ final class FirebaseManager: ObservableObject {
         let user = result.user
         let appUser = AppUser(uid: user.uid, isAnonymous: user.isAnonymous, email: user.email)
         await MainActor.run { self.currentUser = appUser }
+        registerMessagingToken()
         return appUser
         #else
         throw NSError(domain: "Firebase", code: -2, userInfo: [NSLocalizedDescriptionKey: "FirebaseAuth not available"]) 
@@ -62,6 +69,7 @@ final class FirebaseManager: ObservableObject {
         let user = result.user
         let appUser = AppUser(uid: user.uid, isAnonymous: user.isAnonymous, email: user.email)
         await MainActor.run { self.currentUser = appUser }
+        registerMessagingToken()
         return appUser
         #else
         throw NSError(domain: "Firebase", code: -2, userInfo: [NSLocalizedDescriptionKey: "FirebaseAuth not available"]) 
@@ -72,6 +80,22 @@ final class FirebaseManager: ObservableObject {
         #if canImport(FirebaseAuth)
         try Auth.auth().signOut()
         currentUser = nil
+        #endif
+    }
+
+    func saveFCMToken(_ token: String) {
+        #if canImport(FirebaseFirestore)
+        guard let uid = currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).setData(["fcmToken": token], merge: true)
+        #endif
+    }
+
+    private func registerMessagingToken() {
+        #if canImport(FirebaseMessaging)
+        Messaging.messaging().token { token, error in
+            if let token = token { self.saveFCMToken(token) }
+        }
         #endif
     }
 }

@@ -1,13 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // User-owned data: user can read/write only their subtree
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Community feed is write-only via server (Cloud Functions with Admin SDK bypass rules)
     match /community/{postId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.size() < 2048;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+      // All client writes are denied; creation and updates happen via Cloud Functions
+      allow create, update, delete: if false;
+    }
+
+    // Server-only collections (written by Functions)
+    match /userReactions/{docId} {
+      allow read, write: if false;
+    }
+    match /communityReports/{docId} {
+      allow read, write: if false;
+    }
+    match /rateLimits/{docId} {
+      allow read, write: if false;
     }
   }
 }

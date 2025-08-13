@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFunctions)
+import FirebaseFunctions
+#endif
 
 struct SettingsView: View {
     @StateObject private var firebase = FirebaseManager.shared
@@ -6,6 +9,8 @@ struct SettingsView: View {
     @State private var password: String = ""
     @State private var status: String = ""
     @State private var biometricEnabled: Bool = UserDefaults.standard.bool(forKey: "biometric_lock")
+    @AppStorage("notif_daily") private var notifDaily: Bool = true
+    @AppStorage("notif_followups") private var notifFollowups: Bool = true
 
     var body: some View {
         NavigationView {
@@ -55,18 +60,27 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Notifications")) {
+                    Toggle("Daily check-in (8 PM)", isOn: Binding(
+                        get: { notifDaily },
+                        set: { v in notifDaily = v; NotificationManager.shared.setDailyCheckInEnabled(v) }
+                    ))
+                    Toggle("Recovery follow-ups", isOn: Binding(
+                        get: { notifFollowups },
+                        set: { v in notifFollowups = v; NotificationManager.shared.setRecoveryFollowUpsEnabled(v) }
+                    ))
                     Button("Request Permission") {
                         NotificationManager.shared.requestPermission()
                         status = "Notification permission requested"
                     }
-                    Button("Schedule Daily Check-in (8 PM)") {
-                        NotificationManager.shared.scheduleDailyCheckIn(hour: 20)
-                        status = "Daily check-in scheduled"
+                }
+
+                Section(header: Text("Data")) {
+                    Button("Request Data Export") {
+                        Task { await requestExport() }
                     }
-                    Button("Schedule Recovery Follow-ups (24h)") {
-                        NotificationManager.shared.scheduleRecoveryFollowUps()
-                        status = "Recovery follow-ups scheduled"
-                    }
+                    .disabled(!firebase.isConfigured || firebase.currentUser == nil)
+                    Button(role: .destructive) { Task { await requestDeletion() } } label: { Text("Request Account Deletion") }
+                    .disabled(!firebase.isConfigured || firebase.currentUser == nil)
                 }
 
                 Section(header: Text("About")) {
@@ -96,8 +110,33 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .onAppear { firebase.refreshUser() }
+            .onAppear { firebase.refreshUser(); AnalyticsManager.trackScreenView("Settings") }
         }
+    }
+
+    private func requestExport() async {
+        #if canImport(FirebaseFunctions)
+        guard FirebaseManager.shared.isConfigured else { return }
+        let functions = Functions.functions()
+        do {
+            let result = try await functions.httpsCallable("requestDataExport").call([:])
+            if let data = result.data as? [String: Any], let url = data["url"] as? String {
+                status = "Export ready: \(url)"
+            } else {
+                status = "Export requested"
+            }
+        } catch { status = "Export failed: \(error.localizedDescription)" }
+        #endif
+    }
+
+    private func requestDeletion() async {
+        #if canImport(FirebaseFunctions)
+        let functions = Functions.functions()
+        do {
+            _ = try await functions.httpsCallable("requestAccountDeletion").call([:])
+            status = "Deletion requested"
+        } catch { status = "Deletion failed: \(error.localizedDescription)" }
+        #endif
     }
 }
 

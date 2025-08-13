@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 struct RejectionLogView: View {
     @State private var rejectionType: RejectionType = .dating
@@ -6,13 +9,14 @@ struct RejectionLogView: View {
     @State private var note: String = ""
     @State private var isSaving: Bool = false
     @State private var image: UIImage? = nil
+    @State private var showSuccess: Bool = false
 
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
                     ForEach(RejectionType.allCases) { type in
-                        Button(action: { rejectionType = type }) {
+                        Button(action: { rejectionType = type; Haptics.light() }) {
                             Text(type.rawValue)
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
@@ -48,12 +52,23 @@ struct RejectionLogView: View {
                 .disabled(isSaving)
                 .accessibilityLabel(isSaving ? "Logging" : "Log rejection")
 
+                if showSuccess {
+                    Text("Logged. That’s strength.")
+                        .font(.footnote)
+                        .padding(8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green.opacity(0.15))
+                        .cornerRadius(8)
+                        .transition(.opacity)
+                }
+
                 Spacer()
             }
             .padding()
             .navigationTitle("Quick Log")
         }
         .background(Color.resilientBackground.ignoresSafeArea())
+        .onAppear { AnalyticsManager.trackScreenView("QuickLog") }
     }
 
     private func logRejection() {
@@ -63,15 +78,27 @@ struct RejectionLogView: View {
             type: rejectionType,
             emotionalImpact: emotionalImpact,
             note: note.isEmpty ? nil : note,
-            timestamp: Date()
+            timestamp: Date(),
+            imageUrl: nil
         )
         RejectionManager.shared.save(entry: entry)
-        if let image = image {
-            Task {
-                let path = "rejection_images/\(FirebaseManager.shared.currentUser?.uid ?? "local")/\(entry.id).jpg"
-                _ = try? await ImageUploadService.shared.uploadImage(image, path: path)
+        #if canImport(FirebaseFirestore)
+        if FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid {
+            let db = Firestore.firestore()
+            let doc = db.collection("users").document(uid).collection("rejections").document(entry.id.uuidString)
+            if let image = image {
+                Task {
+                    if let url = try? await ImageUploadService.shared.uploadImage(image, path: "rejection_images/\(uid)/\(entry.id).jpg") {
+                        doc.setData(["imageUrl": url], merge: true)
+                    }
+                }
             }
         }
+        #endif
+        AnalyticsManager.trackRejectionLogged(type: rejectionType)
+        Haptics.success()
+        withAnimation { showSuccess = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { withAnimation { showSuccess = false } }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             isSaving = false
             note = ""

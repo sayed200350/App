@@ -24,8 +24,34 @@ final class RejectionManager: ObservableObject {
             do { try bg.save() } catch { print("Core Data save error: \(error)") }
         }
 
-        // Firestore sync (non-blocking)
-        FirestoreSyncService.shared.sync(entry: entry)
+        // Firestore sync via repository (non-blocking)
+        FirestoreSyncService.shared.save(entry: entry)
+    }
+
+    func update(id: UUID, type: RejectionType, emotionalImpact: Double, note: String?) {
+        let bg = CoreDataStack.shared.newBackgroundContext()
+        bg.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "RejectionCD")
+            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            if let obj = try? bg.fetch(request).first {
+                obj.setValue(type.rawValue, forKey: "type")
+                obj.setValue(emotionalImpact, forKey: "emotionalImpact")
+                obj.setValue(note, forKey: "note")
+                do { try bg.save() } catch { print("Core Data update error: \(error)") }
+            }
+        }
+    }
+
+    func delete(id: UUID) {
+        let bg = CoreDataStack.shared.newBackgroundContext()
+        bg.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "RejectionCD")
+            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            if let results = try? bg.fetch(request) {
+                for obj in results { bg.delete(obj) }
+                do { try bg.save() } catch { print("Core Data delete error: \(error)") }
+            }
+        }
     }
 
     func recent(days: Int) -> [RejectionEntry] {
@@ -43,7 +69,7 @@ final class RejectionManager: ObservableObject {
                 else { return nil }
                 let impact = obj.value(forKey: "emotionalImpact") as? Double ?? 0
                 let note = obj.value(forKey: "note") as? String
-                return RejectionEntry(id: id, type: type, emotionalImpact: impact, note: note, timestamp: ts)
+                return RejectionEntry(id: id, type: type, emotionalImpact: impact, note: note, timestamp: ts, imageUrl: nil)
             }
         } catch {
             print("Core Data fetch error: \(error)")

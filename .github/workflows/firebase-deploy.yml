@@ -1,0 +1,35 @@
+name: Firebase Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Firebase target: default|staging|production'
+        required: false
+        default: 'default'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Functions deps
+        working-directory: functions
+        run: npm ci
+      - name: Build Functions
+        working-directory: functions
+        run: npm run build
+      - name: Write GCP service account key
+        run: |
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $RUNNER_TEMP/gcp-key.json
+          echo "PROJECT_ID=$(if [ \"${{ github.event.inputs.target }}\" = \"production\" ]; then echo resilientme-prod; else echo resilientme-staging; fi)" >> $GITHUB_ENV
+      - name: Firebase deploy (rules, indexes, functions)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-key.json
+        run: |
+          npm i -g firebase-tools
+          firebase deploy --project $PROJECT_ID --only firestore:rules,firestore:indexes,functions
