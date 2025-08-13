@@ -27,10 +27,12 @@ struct CommunityStory: Identifiable, Codable {
 
 final class CommunityManager: ObservableObject {
     @Published private(set) var stories: [CommunityStory] = []
+    @Published var isLoading: Bool = false
 
     func loadStories() async {
         #if canImport(FirebaseFirestore)
         guard FirebaseManager.shared.isConfigured else { return }
+        await MainActor.run { self.isLoading = true }
         let db = Firestore.firestore()
         let snapshot = try? await db.collection("community").whereField("status", isEqualTo: "visible").order(by: "createdAt", descending: true).limit(to: 100).getDocuments()
         let list: [CommunityStory] = snapshot?.documents.compactMap { doc in
@@ -44,7 +46,10 @@ final class CommunityManager: ObservableObject {
             reactionsMap.forEach { key, value in if let r = Reaction(rawValue: key) { reactions[r] = value } }
             return CommunityStory(id: doc.documentID, type: type, content: content, createdAt: ts.dateValue(), reactions: reactions, userReaction: nil)
         } ?? []
-        await MainActor.run { self.stories = list }
+        await MainActor.run {
+            self.stories = list
+            self.isLoading = false
+        }
         #endif
     }
 
@@ -54,6 +59,11 @@ final class CommunityManager: ObservableObject {
     }
 
     func addReaction(to story: CommunityStory, reaction: Reaction) {
+        // optimistic update
+        if let idx = stories.firstIndex(where: { $0.id == story.id }) {
+            stories[idx].reactions[reaction, default: 0] += 1
+            stories[idx].userReaction = reaction
+        }
         #if canImport(FirebaseFunctions)
         guard FirebaseManager.shared.isConfigured else { return }
         let functions = Functions.functions()

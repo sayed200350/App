@@ -19,7 +19,11 @@ struct CommunityView: View {
                     .padding(.horizontal)
                 }
 
-                if manager.getStories(filter: selectedFilter).isEmpty {
+                if manager.isLoading {
+                    VStack(spacing: 12) {
+                        ForEach(0..<6) { _ in SkeletonView(height: 72, cornerRadius: 12) }
+                    }.padding()
+                } else if manager.getStories(filter: selectedFilter).isEmpty {
                     VStack(spacing: 12) {
                         Text("No stories yet.").font(.resilientHeadline)
                         Text("Share your first story. Someone will relate.").font(.resilientBody).foregroundColor(.secondary)

@@ -6,17 +6,24 @@ import FirebaseFirestore
 struct DashboardView: View {
     @EnvironmentObject private var analyticsManager: AnalyticsManager
     @State private var patterns: [Pattern] = []
+    @State private var isLoading: Bool = true
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 16) {
-                    ResilienceRing(score: analyticsManager.currentResilienceScore)
-                    WeeklyStatsCard(stats: analyticsManager.weeklyStats)
-                    if !patterns.isEmpty {
-                        PatternAlertsCard(patterns: patterns)
+                    if isLoading {
+                        SkeletonView(height: 180, cornerRadius: 16)
+                        SkeletonView(height: 110, cornerRadius: 16)
+                        SkeletonView(height: 140, cornerRadius: 16)
+                    } else {
+                        ResilienceRing(score: analyticsManager.currentResilienceScore)
+                        WeeklyStatsCard(stats: analyticsManager.weeklyStats)
+                        if !patterns.isEmpty {
+                            PatternAlertsCard(patterns: patterns)
+                        }
+                        RecoveryTrendsChart(points: analyticsManager.recoveryTrend)
                     }
-                    RecoveryTrendsChart(points: analyticsManager.recoveryTrend)
                 }
                 .padding()
             }
@@ -34,9 +41,11 @@ struct DashboardView: View {
                 }
             }
             .onAppear {
+                isLoading = true
                 analyticsManager.recalculate()
                 loadPatterns()
                 AnalyticsManager.trackScreenView("Dashboard")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { isLoading = false }
             }
         }
         .background(Color.resilientBackground.ignoresSafeArea())
