@@ -1,0 +1,31 @@
+{
+  "NSPrivacyTracking": false,
+  "NSPrivacyTrackingDomains": [],
+  "NSPrivacyCollectedDataTypes": [
+    {
+      "NSPrivacyCollectedDataType": "User ID",
+      "NSPrivacyCollectedDataTypeLinked": true,
+      "NSPrivacyCollectedDataTypeTracking": false,
+      "NSPrivacyCollectedDataTypePurposes": ["App Functionality", "Analytics"]
+    },
+    {
+      "NSPrivacyCollectedDataType": "Device ID",
+      "NSPrivacyCollectedDataTypeLinked": true,
+      "NSPrivacyCollectedDataTypeTracking": false,
+      "NSPrivacyCollectedDataTypePurposes": ["App Functionality"]
+    },
+    {
+      "NSPrivacyCollectedDataType": "Product Interaction",
+      "NSPrivacyCollectedDataTypeLinked": false,
+      "NSPrivacyCollectedDataTypeTracking": false,
+      "NSPrivacyCollectedDataTypePurposes": ["Analytics"]
+    },
+    {
+      "NSPrivacyCollectedDataType": "Email Address",
+      "NSPrivacyCollectedDataTypeLinked": true,
+      "NSPrivacyCollectedDataTypeTracking": false,
+      "NSPrivacyCollectedDataTypePurposes": ["Account Management"]
+    }
+  ],
+  "NSPrivacyAccessedAPITypes": []
+}

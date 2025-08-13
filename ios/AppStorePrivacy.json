@@ -1,0 +1,37 @@
+{
+  "data_collected": [
+    {
+      "category": "Contact Info",
+      "items": [
+        { "type": "Email Address", "linked_to_user": true, "used_for_tracking": false, "purposes": ["Account Management"] }
+      ]
+    },
+    {
+      "category": "Identifiers",
+      "items": [
+        { "type": "User ID", "linked_to_user": true, "used_for_tracking": false, "purposes": ["App Functionality", "Analytics"] },
+        { "type": "Device ID", "linked_to_user": true, "used_for_tracking": false, "purposes": ["App Functionality"] }
+      ]
+    },
+    {
+      "category": "Usage Data",
+      "items": [
+        { "type": "Product Interaction", "linked_to_user": false, "used_for_tracking": false, "purposes": ["Analytics"] }
+      ]
+    }
+  ],
+  "data_not_collected": [
+    "Financial Info",
+    "Health & Fitness",
+    "Location",
+    "Sensitive Info",
+    "Contacts",
+    "Search History",
+    "Browsing History",
+    "Purchases",
+    "Diagnostics",
+    "Other Data"
+  ],
+  "tracking": false,
+  "third_party_advertising": false
+}
