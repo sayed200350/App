@@ -36,6 +36,14 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         UNUserNotificationCenter.current().add(request)
     }
 
+    func setDailyCheckInEnabled(_ enabled: Bool) {
+        if enabled {
+            scheduleDailyCheckIn(hour: 20)
+        } else {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["daily-checkin"])
+        }
+    }
+
     func scheduleRecoveryFollowUps() {
         let recentHigh = RejectionManager.shared.recentHighImpact()
         for r in recentHigh {
@@ -47,6 +55,16 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 60 * 60, repeats: false)
             let request = UNNotificationRequest(identifier: "recovery-followup-\(r.id.uuidString)", content: content, trigger: trigger)
             UNUserNotificationCenter.current().add(request)
+        }
+    }
+
+    func setRecoveryFollowUpsEnabled(_ enabled: Bool) {
+        if enabled { return }
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let ids = requests.map { $0.identifier }.filter { $0.hasPrefix("recovery-followup-") }
+            if !ids.isEmpty {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+            }
         }
     }
 
