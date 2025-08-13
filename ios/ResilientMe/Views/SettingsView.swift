@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var password: String = ""
     @State private var status: String = ""
     @State private var biometricEnabled: Bool = UserDefaults.standard.bool(forKey: "biometric_lock")
+    @AppStorage("notif_daily") private var notifDaily: Bool = true
+    @AppStorage("notif_followups") private var notifFollowups: Bool = true
 
     var body: some View {
         NavigationView {
@@ -58,17 +60,17 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Notifications")) {
+                    Toggle("Daily check-in (8 PM)", isOn: Binding(
+                        get: { notifDaily },
+                        set: { v in notifDaily = v; NotificationManager.shared.setDailyCheckInEnabled(v) }
+                    ))
+                    Toggle("Recovery follow-ups", isOn: Binding(
+                        get: { notifFollowups },
+                        set: { v in notifFollowups = v; NotificationManager.shared.setRecoveryFollowUpsEnabled(v) }
+                    ))
                     Button("Request Permission") {
                         NotificationManager.shared.requestPermission()
                         status = "Notification permission requested"
-                    }
-                    Button("Schedule Daily Check-in (8 PM)") {
-                        NotificationManager.shared.scheduleDailyCheckIn(hour: 20)
-                        status = "Daily check-in scheduled"
-                    }
-                    Button("Schedule Recovery Follow-ups (24h)") {
-                        NotificationManager.shared.scheduleRecoveryFollowUps()
-                        status = "Recovery follow-ups scheduled"
                     }
                 }
 

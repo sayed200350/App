@@ -24,6 +24,8 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
     }
 
     func scheduleDailyCheckIn(hour: Int = 20) {
+        // remove existing
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["daily-checkin"])
         var dateComponents = DateComponents()
         dateComponents.hour = hour
         let content = UNMutableNotificationContent()
