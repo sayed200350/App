@@ -106,7 +106,6 @@ export const processNotificationQueue = functions.pubsub
       const queueRef = doc.ref;
       const userRef = queueRef.parent.parent; // users/{uid}
       if (!userRef) continue;
-      const uid = userRef.id;
 
       tasks.push(
         (async () => {
@@ -146,3 +145,48 @@ export const processNotificationQueue = functions.pubsub
     await Promise.allSettled(tasks);
     return null;
   });
+
+// Callable: submit community post
+export const submitPost = functions.https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new functions.https.HttpsError('unauthenticated', 'Auth required');
+  let type = String(data?.type || '').slice(0, 32);
+  let content = String(data?.content || '').trim();
+  content = content.replace(/[<>]/g, '');
+  if (content.length === 0 || content.length > 2000) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid content');
+  }
+  const doc = await admin.firestore().collection('community').add({
+    type,
+    content,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    reactions: {},
+    authorUid: uid,
+  });
+  return { id: doc.id };
+});
+
+// Callable: react to post with dedupe
+export const reactToPost = functions.https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new functions.https.HttpsError('unauthenticated', 'Auth required');
+  const postId = String(data?.postId || '');
+  const reaction = String(data?.reaction || '');
+  if (!postId || !reaction) throw new functions.https.HttpsError('invalid-argument', 'Missing arguments');
+
+  const postRef = admin.firestore().collection('community').doc(postId);
+  const userMarkRef = postRef.collection('userReactions').doc(uid);
+
+  await admin.firestore().runTransaction(async (tx) => {
+    const mark = await tx.get(userMarkRef);
+    if (mark.exists) throw new functions.https.HttpsError('already-exists', 'Already reacted');
+    tx.set(userMarkRef, { reactedAt: admin.firestore.FieldValue.serverTimestamp(), reaction });
+    tx.set(
+      postRef,
+      { [`reactions.${reaction}`]: admin.firestore.FieldValue.increment(1) },
+      { merge: true }
+    );
+  });
+
+  return { ok: true };
+});

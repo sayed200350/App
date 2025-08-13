@@ -72,11 +72,20 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         #endif
     }
 
-    // Track notification opens
+    // Track notification opens and navigate
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         #if canImport(FirebaseAnalytics)
-        Analytics.logEvent("notification_open", parameters: ["category": "local"])
+        Analytics.logEvent("notification_open", parameters: ["category": "local_or_push"])
         #endif
+        let userInfo = response.notification.request.content.userInfo
+        if let type = userInfo["type"] as? String {
+            if type == "recovery-followup" { AppRouter.shared.navigate(to: .recovery) }
+            else if type == "daily-checkin" { AppRouter.shared.navigate(to: .log) }
+        } else {
+            let id = response.notification.request.identifier
+            if id == "daily-checkin" { AppRouter.shared.navigate(to: .log) }
+            else if id.hasPrefix("recovery-followup-") { AppRouter.shared.navigate(to: .recovery) }
+        }
         completionHandler()
     }
 }

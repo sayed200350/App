@@ -20,6 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
            let options = FirebaseOptions(contentsOfFile: filePath) {
             FirebaseApp.configure(options: options)
             FirebaseConfigurator.configureEmulatorsIfNeeded()
+            RemoteConfigManager.shared.fetchAndActivate()
         } else {
             print("[Firebase] GoogleService-Info.plist missing or invalid. Skipping FirebaseApp.configure().")
         }
