@@ -12,5 +12,16 @@ service cloud.firestore {
       // All client writes are denied; creation and updates happen via Cloud Functions
       allow create, update, delete: if false;
     }
+
+    // Server-only collections (written by Functions)
+    match /userReactions/{docId} {
+      allow read, write: if false;
+    }
+    match /communityReports/{docId} {
+      allow read, write: if false;
+    }
+    match /rateLimits/{docId} {
+      allow read, write: if false;
+    }
   }
 }

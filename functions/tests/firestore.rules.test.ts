@@ -1,5 +1,6 @@
 import { initializeTestEnvironment, RulesTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { readFileSync } from 'fs';
+
 let testEnv: RulesTestEnvironment;
 
 before(async () => {
@@ -31,6 +32,14 @@ describe('Firestore Security Rules', () => {
 
     await assertSucceeds(aliceDb.collection('users').doc('alice').collection('rejections').doc('1').set({ timestamp: new Date(), type: 'dating' }));
     await assertFails(bobDb.collection('users').doc('alice').collection('rejections').doc('2').set({ timestamp: new Date(), type: 'job' }));
+  });
+
+  it('denies writes to server-only collections', async () => {
+    const ctx = testEnv.authenticatedContext('alice');
+    const db = ctx.firestore();
+    await assertFails(db.collection('userReactions').doc('x').set({}));
+    await assertFails(db.collection('communityReports').doc('x').set({}));
+    await assertFails(db.collection('rateLimits').doc('x').set({}));
   });
 
   it('allows public read of community', async () => {

@@ -38,7 +38,7 @@ struct CommunityView: View {
                 .sheet(isPresented: $showingSubmission) { StorySubmissionView(onSubmit: { type, text in
                     Task { try? await manager.submitStory(type: type, content: text); AnalyticsManager.trackCommunityPost(); await manager.loadStories() }
                 }) }
-                .onAppear { Task { await manager.loadStories() } }
+                .onAppear { AnalyticsManager.trackScreenView("Community"); Task { await manager.loadStories() } }
             }
         }
         .background(Color.resilientBackground.ignoresSafeArea())

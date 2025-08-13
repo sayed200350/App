@@ -21,6 +21,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             print("[Firebase] GoogleService-Info.plist missing or invalid. Skipping FirebaseApp.configure().")
         }
 #endif
+        // Initialize notification handling early
+        _ = NotificationManager.shared
         PerformanceMetrics.end("App Launch Configure", id: id)
         return true
     }

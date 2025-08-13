@@ -108,7 +108,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .onAppear { firebase.refreshUser() }
+            .onAppear { firebase.refreshUser(); AnalyticsManager.trackScreenView("Settings") }
         }
     }
 
@@ -118,7 +118,11 @@ struct SettingsView: View {
         let functions = Functions.functions()
         do {
             let result = try await functions.httpsCallable("requestDataExport").call([:])
-            status = "Export ready: \(String(describing: result.data))"
+            if let data = result.data as? [String: Any], let url = data["url"] as? String {
+                status = "Export ready: \(url)"
+            } else {
+                status = "Export requested"
+            }
         } catch { status = "Export failed: \(error.localizedDescription)" }
         #endif
     }

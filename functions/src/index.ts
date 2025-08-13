@@ -19,6 +19,12 @@ const ensureAuthed = (context: functions.https.CallableContext): string => {
   return context.auth.uid;
 };
 
+const ensureAdmin = (context: functions.https.CallableContext) => {
+  if (!context.auth || !(context.auth.token as any)?.admin) {
+    throw new functions.https.HttpsError('permission-denied', 'Admin only');
+  }
+};
+
 const rateLimitCheck = async (uid: string, key: string, limit: number, windowSeconds: number) => {
   const bucketRef = db.collection('rateLimits').doc(`${uid}:${key}`);
   const now = admin.firestore.Timestamp.now();
@@ -38,6 +44,23 @@ const rateLimitCheck = async (uid: string, key: string, limit: number, windowSec
     }
   });
 };
+
+// Backfill: set status: 'visible' where missing on recent community posts (admin only)
+export const backfillCommunityStatus = functions.https.onCall(async (_data, context) => {
+  ensureAdmin(context);
+  const snap = await db.collection('community').orderBy('createdAt', 'desc').limit(1000).get();
+  const batch = db.batch();
+  let count = 0;
+  for (const doc of snap.docs) {
+    const data = doc.data() as any;
+    if (!Object.prototype.hasOwnProperty.call(data, 'status')) {
+      batch.set(doc.ref, { status: 'visible' }, { merge: true });
+      count++;
+    }
+  }
+  if (count > 0) await batch.commit();
+  return { updated: count };
+});
 
 // On rejection create: update aggregates, compute patterns, and schedule follow-up notification
 export const onRejectionCreate = functions.firestore
@@ -259,6 +282,27 @@ export const requestDataExport = functions.https.onCall(async (_data, context) =
   };
   // For MVP return directly; in production, store file and email link
   return payload;
+});
+
+// Modify requestDataExport to write to Storage and return a signed URL
+export const requestDataExport = functions.https.onCall(async (_data, context) => {
+  const uid = ensureAuthed(context);
+  await rateLimitCheck(uid, 'export', 3, 60 * 10); // 3 exports per 10 min
+  const userRef = db.collection('users').doc(uid);
+  const [rejectionsSnap, challengesSnap] = await Promise.all([
+    userRef.collection('rejections').get(),
+    userRef.collection('challenges').get(),
+  ]);
+  const payload = {
+    rejections: rejectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    challenges: challengesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    generatedAt: new Date().toISOString(),
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const path = `exports/${uid}/${Date.now()}.json`;
+  await storage.bucket().file(path).save(Buffer.from(json), { contentType: 'application/json' });
+  const [url] = await storage.bucket().file(path).getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 });
+  return { url };
 });
 
 // Trigger: When a rejection is deleted, remove attached image from Storage if present

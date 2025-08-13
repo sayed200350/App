@@ -48,7 +48,7 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
-            .onAppear { loadHistory() }
+            .onAppear { AnalyticsManager.trackScreenView("History"); loadHistory() }
         }
         .background(Color.resilientBackground.ignoresSafeArea())
     }

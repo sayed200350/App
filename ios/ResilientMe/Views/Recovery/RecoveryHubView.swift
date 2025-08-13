@@ -22,6 +22,8 @@ struct RecoveryHubView: View {
             .navigationTitle("Recovery Hub")
             .onAppear { last = RejectionManager.shared.recent(days: 30).first }
         }
+        .background(Color.resilientBackground.ignoresSafeArea())
+        .onAppear { AnalyticsManager.trackScreenView("Recovery") }
     }
 }
 

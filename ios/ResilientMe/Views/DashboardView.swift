@@ -36,6 +36,7 @@ struct DashboardView: View {
             .onAppear {
                 analyticsManager.recalculate()
                 loadPatterns()
+                AnalyticsManager.trackScreenView("Dashboard")
             }
         }
         .background(Color.resilientBackground.ignoresSafeArea())

@@ -57,6 +57,7 @@ struct RejectionLogView: View {
             .navigationTitle("Quick Log")
         }
         .background(Color.resilientBackground.ignoresSafeArea())
+        .onAppear { AnalyticsManager.trackScreenView("QuickLog") }
     }
 
     private func logRejection() {
@@ -66,7 +67,8 @@ struct RejectionLogView: View {
             type: rejectionType,
             emotionalImpact: emotionalImpact,
             note: note.isEmpty ? nil : note,
-            timestamp: Date()
+            timestamp: Date(),
+            imageUrl: nil
         )
         RejectionManager.shared.save(entry: entry)
         #if canImport(FirebaseFirestore)
