@@ -23,16 +23,13 @@ jobs:
       - name: Build Functions
         working-directory: functions
         run: npm run build
+      - name: Write GCP service account key
+        run: |
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $RUNNER_TEMP/gcp-key.json
+          echo "PROJECT_ID=$(if [ \"${{ github.event.inputs.target }}\" = \"production\" ]; then echo resilientme-prod; else echo resilientme-staging; fi)" >> $GITHUB_ENV
       - name: Firebase deploy (rules, indexes, functions)
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-key.json
         run: |
           npm i -g firebase-tools
-          if [ "${{ github.event.inputs.target }}" = "production" ]; then
-            firebase use production
-          elif [ "${{ github.event.inputs.target }}" = "staging" ]; then
-            firebase use staging
-          else
-            firebase use default
-          fi
-          firebase deploy --only firestore:rules,firestore:indexes,functions
+          firebase deploy --project $PROJECT_ID --only firestore:rules,firestore:indexes,functions
