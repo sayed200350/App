@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: 20
 
+      - name: Auth to Google Cloud (service account)
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Install Functions deps
         working-directory: functions
         run: npm ci
@@ -27,14 +32,10 @@ jobs:
         working-directory: functions
         run: npm run build
 
-      - name: Write GCP service account key
-        run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $RUNNER_TEMP/gcp-key.json
-          echo "PROJECT_ID=$(if [ \"${{ github.event.inputs.target }}\" = \"production\" ]; then echo resilientme-prod; else echo resilientme-staging; fi)" >> $GITHUB_ENV
+      - name: Select project
+        run: echo "PROJECT_ID=$(if [ '${{ github.event.inputs.target }}' = 'production' ]; then echo resilientme-prod; else echo resilientme-staging; fi)" >> $GITHUB_ENV
 
-      - name: Firebase deploy (rules, indexes, functions)
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-key.json
+      - name: Deploy rules, indexes, and functions
         run: |
           npm i -g firebase-tools
           firebase deploy --project $PROJECT_ID --only firestore:rules,firestore:indexes,functions
