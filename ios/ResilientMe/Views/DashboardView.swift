@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 struct DashboardView: View {
     @EnvironmentObject private var analyticsManager: AnalyticsManager
@@ -32,10 +35,36 @@ struct DashboardView: View {
             }
             .onAppear {
                 analyticsManager.recalculate()
-                patterns = PatternAnalyzer.shared.analyzePatterns(for: RejectionManager.shared.recent(days: analyticsManager.timeframe.days))
+                loadPatterns()
             }
         }
         .background(Color.resilientBackground.ignoresSafeArea())
+    }
+
+    private func loadPatterns() {
+        #if canImport(FirebaseFirestore)
+        guard FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid else {
+            patterns = PatternAnalyzer.shared.analyzePatterns(for: RejectionManager.shared.recent(days: analyticsManager.timeframe.days))
+            return
+        }
+        let ref = Firestore.firestore().collection("users").document(uid).collection("aggregates").document("patterns")
+        ref.getDocument { snap, _ in
+            if let data = snap?.data(), let array = data["patterns"] as? [[String: Any]] {
+                let mapped = array.compactMap { dict -> Pattern? in
+                    guard let title = dict["title"] as? String,
+                          let description = dict["description"] as? String,
+                          let insight = dict["insight"] as? String,
+                          let actionable = dict["actionable"] as? String else { return nil }
+                    return Pattern(title: title, description: description, insight: insight, actionable: actionable)
+                }
+                self.patterns = mapped
+            } else {
+                self.patterns = PatternAnalyzer.shared.analyzePatterns(for: RejectionManager.shared.recent(days: analyticsManager.timeframe.days))
+            }
+        }
+        #else
+        patterns = PatternAnalyzer.shared.analyzePatterns(for: RejectionManager.shared.recent(days: analyticsManager.timeframe.days))
+        #endif
     }
 }
 struct PatternAlertsCard: View {

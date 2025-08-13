@@ -24,8 +24,8 @@ final class RejectionManager: ObservableObject {
             do { try bg.save() } catch { print("Core Data save error: \(error)") }
         }
 
-        // Firestore sync (non-blocking)
-        FirestoreSyncService.shared.sync(entry: entry)
+        // Firestore sync via repository (non-blocking)
+        FirestoreSyncService.shared.save(entry: entry)
     }
 
     func recent(days: Int) -> [RejectionEntry] {

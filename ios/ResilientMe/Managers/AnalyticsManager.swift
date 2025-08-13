@@ -13,8 +13,24 @@ final class AnalyticsManager: ObservableObject {
     @Published var recoveryTrend: [TrendPoint] = []
 
     func trackRejectionLogged(type: RejectionType) {
-        // TODO: hook to Firebase Analytics later
+        // TODO: hook to Firebase Analytics later (event: rejection_log)
         recalculate()
+    }
+
+    func trackChallengeComplete() {
+        // TODO: event: challenge_complete
+    }
+
+    func trackCommunityPost() {
+        // TODO: event: community_post
+    }
+
+    func trackReactionAdd() {
+        // TODO: event: reaction_add
+    }
+
+    func trackScreenView(_ name: String) {
+        // TODO: event: screen_view
     }
 
     func recalculate() {

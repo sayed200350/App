@@ -4,6 +4,8 @@ import UserNotifications
 final class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
 
+    var onDeepLink: ((String) -> Void)?
+
     private override init() {
         super.init()
         UNUserNotificationCenter.current().delegate = self
@@ -36,6 +38,20 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
             let request = UNNotificationRequest(identifier: "recovery-followup-\(r.id.uuidString)", content: content, trigger: trigger)
             UNUserNotificationCenter.current().add(request)
         }
+    }
+
+    // Present notifications while app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .list, .sound])
+    }
+
+    // Handle deep-link from notification response
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        if let link = userInfo["deep_link"] as? String {
+            onDeepLink?(link)
+        }
+        completionHandler()
     }
 }
 

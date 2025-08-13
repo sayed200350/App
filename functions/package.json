@@ -7,7 +7,8 @@
     "build": "tsc -p .",
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth,storage",
     "deploy": "npm run build && firebase deploy --only functions",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "mocha -r ts-node/register tests/**/*.test.ts --timeout 20000"
   },
   "dependencies": {
     "firebase-admin": "^12.5.0",
@@ -15,6 +16,10 @@
   },
   "devDependencies": {
     "typescript": "^5.4.0",
-    "eslint": "^9.0.0"
+    "eslint": "^9.0.0",
+    "mocha": "^10.4.0",
+    "chai": "^4.5.0",
+    "ts-node": "^10.9.2",
+    "@firebase/rules-unit-testing": "^3.0.5"
   }
 }

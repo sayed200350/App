@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 struct ChallengeView: View {
     @StateObject private var manager = ChallengeManager()
@@ -25,10 +28,10 @@ struct ChallengeView: View {
                     HStack {
                         ResilientButton(title: "Complete", style: .primary) {
                             manager.markCompleted(c)
-                            challenge = manager.getTodaysChallenge()
+                            loadChallenge()
                         }
                         ResilientButton(title: "Skip", style: .secondary) {
-                            challenge = manager.getTodaysChallenge()
+                            loadChallenge()
                         }
                     }
                 } else {
@@ -44,8 +47,31 @@ struct ChallengeView: View {
             }
             .padding()
             .navigationTitle("Today's Challenge")
-            .onAppear { challenge = manager.getTodaysChallenge() }
+            .onAppear { loadChallenge() }
         }
+    }
+
+    private func loadChallenge() {
+        #if canImport(FirebaseFirestore)
+        if FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid {
+            let today = ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: Date())).prefix(10)
+            let doc = Firestore.firestore().collection("users").document(uid).collection("challenges").document(String(today))
+            doc.getDocument { snap, _ in
+                if let data = snap?.data(),
+                   let title = data["title"] as? String,
+                   let description = data["description"] as? String,
+                   let typeRaw = data["type"] as? String,
+                   let type = RejectionType(rawValue: typeRaw),
+                   let timeEstimate = data["timeEstimate"] as? String {
+                    self.challenge = Challenge(title: title, description: description, type: type, difficulty: .beginner, points: data["points"] as? Int ?? 10, timeEstimate: timeEstimate)
+                    return
+                }
+                self.challenge = manager.getTodaysChallenge()
+            }
+            return
+        }
+        #endif
+        self.challenge = manager.getTodaysChallenge()
     }
 }
 

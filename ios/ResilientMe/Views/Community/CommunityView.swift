@@ -24,6 +24,9 @@ struct CommunityView: View {
                         CommunityStoryCard(story: story) { reaction in
                             manager.addReaction(to: story, reaction: reaction)
                         }
+                        .swipeActions {
+                            Button(role: .destructive) { manager.report(story: story) } label: { Label("Report", systemImage: "exclamationmark.triangle") }
+                        }
                     }
                 }
                 .listStyle(.plain)

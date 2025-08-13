@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(FirebaseFunctions)
+import FirebaseFunctions
+#endif
 
 struct SettingsView: View {
     @StateObject private var firebase = FirebaseManager.shared
@@ -69,6 +72,15 @@ struct SettingsView: View {
                     }
                 }
 
+                Section(header: Text("Data")) {
+                    Button("Request Data Export") {
+                        Task { await requestExport() }
+                    }
+                    .disabled(!firebase.isConfigured || firebase.currentUser == nil)
+                    Button(role: .destructive) { Task { await requestDeletion() } } label: { Text("Request Account Deletion") }
+                    .disabled(!firebase.isConfigured || firebase.currentUser == nil)
+                }
+
                 Section(header: Text("About")) {
                     NavigationLink("Privacy Policy") { PrivacyPolicyView() }
                     NavigationLink("Terms of Service") { TermsView() }
@@ -98,6 +110,27 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .onAppear { firebase.refreshUser() }
         }
+    }
+
+    private func requestExport() async {
+        #if canImport(FirebaseFunctions)
+        guard FirebaseManager.shared.isConfigured else { return }
+        let functions = Functions.functions()
+        do {
+            let result = try await functions.httpsCallable("requestDataExport").call([:])
+            status = "Export ready: \(String(describing: result.data))"
+        } catch { status = "Export failed: \(error.localizedDescription)" }
+        #endif
+    }
+
+    private func requestDeletion() async {
+        #if canImport(FirebaseFunctions)
+        let functions = Functions.functions()
+        do {
+            _ = try await functions.httpsCallable("requestAccountDeletion").call([:])
+            status = "Deletion requested"
+        } catch { status = "Deletion failed: \(error.localizedDescription)" }
+        #endif
     }
 }
 

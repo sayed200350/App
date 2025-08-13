@@ -7,6 +7,9 @@ import FirebaseCore
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 struct AppUser {
     let uid: String
@@ -72,6 +75,14 @@ final class FirebaseManager: ObservableObject {
         #if canImport(FirebaseAuth)
         try Auth.auth().signOut()
         currentUser = nil
+        #endif
+    }
+
+    func saveFCMToken(_ token: String) {
+        #if canImport(FirebaseFirestore)
+        guard let uid = currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).setData(["fcmToken": token], merge: true)
         #endif
     }
 }

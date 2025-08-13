@@ -3,6 +3,9 @@ import Foundation
 #if canImport(FirebaseFirestore)
 import FirebaseFirestore
 #endif
+#if canImport(FirebaseFunctions)
+import FirebaseFunctions
+#endif
 
 struct CommunityStory: Identifiable, Codable {
     let id: String
@@ -51,26 +54,40 @@ final class CommunityManager: ObservableObject {
     }
 
     func addReaction(to story: CommunityStory, reaction: Reaction) {
-        #if canImport(FirebaseFirestore)
+        #if canImport(FirebaseFunctions)
         guard FirebaseManager.shared.isConfigured else { return }
-        let db = Firestore.firestore()
-        let ref = db.collection("community").document(story.id)
-        let key = reaction.rawValue
-        ref.setData(["reactions.\(key)": FieldValue.increment(Int64(1))], merge: true)
+        let functions = Functions.functions()
+        let payload: [String: Any] = [
+            "postId": story.id,
+            "reaction": reaction.rawValue
+        ]
+        functions.httpsCallable("reactToPost").call(payload) { result, error in
+            if let error = error { print("[Functions] reactToPost error: \(error)") }
+        }
         #endif
     }
 
     func submitStory(type: RejectionType, content: String) async throws {
-        #if canImport(FirebaseFirestore)
+        #if canImport(FirebaseFunctions)
         guard FirebaseManager.shared.isConfigured else { return }
-        let db = Firestore.firestore()
+        let functions = Functions.functions()
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitized = trimmed.replacingOccurrences(of: "[<>]", with: "", options: .regularExpression)
         let payload: [String: Any] = [
             "type": type.rawValue,
-            "content": content,
-            "createdAt": Timestamp(date: Date()),
-            "reactions": [:]
+            "content": sanitized
         ]
-        _ = try await db.collection("community").addDocument(data: payload)
+        _ = try await functions.httpsCallable("createCommunityPost").call(payload)
+        #endif
+    }
+
+    func report(story: CommunityStory) {
+        #if canImport(FirebaseFunctions)
+        guard FirebaseManager.shared.isConfigured else { return }
+        let functions = Functions.functions()
+        functions.httpsCallable("reportPost").call(["postId": story.id]) { result, error in
+            if let error = error { print("[Functions] reportPost error: \(error)") }
+        }
         #endif
     }
 }
