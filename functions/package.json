@@ -8,11 +8,13 @@
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth,storage",
     "deploy": "npm run build && firebase deploy --only functions",
     "lint": "eslint .",
-    "test": "mocha -r ts-node/register tests/**/*.test.ts --timeout 20000"
+    "test": "mocha -r ts-node/register tests/**/*.test.ts --timeout 20000",
+    "format": "eslint --fix . || true"
   },
   "dependencies": {
     "firebase-admin": "^12.5.0",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^5.0.1",
+    "@google-cloud/vertexai": "^1.6.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

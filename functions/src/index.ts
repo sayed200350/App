@@ -294,22 +294,7 @@ export const generateDailyChallenges = functions.pubsub.schedule('every day 05:0
   return null;
 });
 
-// Callable: Request data export (dummy bundles user-owned subcollections)
-export const requestDataExport = functions.https.onCall(async (_data, context) => {
-  const uid = ensureAuthed(context);
-  const userRef = db.collection('users').doc(uid);
-  const [rejectionsSnap, challengesSnap] = await Promise.all([
-    userRef.collection('rejections').get(),
-    userRef.collection('challenges').get(),
-  ]);
-  const payload = {
-    rejections: rejectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    challenges: challengesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    generatedAt: new Date().toISOString(),
-  };
-  // For MVP return directly; in production, store file and email link
-  return payload;
-});
+// [removed] Duplicate requestDataExport variant replaced by the Storage-backed implementation below.
 
 // Modify requestDataExport to write to Storage and return a signed URL
 export const requestDataExport = functions.https.onCall(async (_data, context) => {
@@ -409,4 +394,102 @@ export const reportPost = functions.https.onCall(async (data, context) => {
   });
 
   return { ok: true };
+});
+
+// Callable: Generate a personalized recovery plan using Vertex AI
+export const generateRecoveryPlan = functions.https.onCall(async (data, context) => {
+  const uid = ensureAuthed(context);
+  await rateLimitCheck(uid, 'aiRecovery', 5, 60 * 10); // 5 calls per 10 minutes
+
+  // Feature flag via Remote Config (optional): allow override to disable
+  try {
+    const remoteEnabled = (await admin.remoteConfig().getTemplate()).parameters['aiRecoveryEnabled']?.defaultValue?.asBoolean();
+    if (remoteEnabled === false) {
+      throw new functions.https.HttpsError('failed-precondition', 'AI recovery is disabled');
+    }
+  } catch (e) {
+    // If Remote Config not initialized in admin SDK, allow by default
+  }
+
+  const typeRaw = String(data?.type || '').toLowerCase();
+  const impact = Math.max(0, Math.min(10, Number(data?.impact ?? 0)));
+  const tone = String(data?.tone || 'gentle');
+  const note = sanitizeText(String(data?.note || ''));
+  const allowedTypes = new Set(['dating','job','social','academic','other']);
+  if (!allowedTypes.has(typeRaw)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid type');
+  }
+
+  // Build minimal prompt with clear JSON schema
+  const system = [
+    'You are a compassionate resilience coach for Gen Z. You must respond ONLY with strict minified JSON matching this schema:',
+    '{"steps":[{"title":string,"detail":string}],"affirmations":string[],"templates":[{"label":string,"text":string}]}',
+    'Keep content grounded, practical, and culturally sensitive. Avoid medical or legal advice.'
+  ].join('\n');
+  const user = [
+    `Context: type=${typeRaw}, impact=${impact}, tone=${tone}.`,
+    note ? `User note: ${note}` : 'User note: (none)',
+    'Produce 3-5 short steps, 3 affirmations, and up to 2 response templates relevant to the context.'
+  ].join('\n');
+
+  // Lazy import Vertex AI SDK to avoid cold-start overhead if unused
+  const { VertexAI } = await import('@google-cloud/vertexai');
+  const location = process.env.GCLOUD_REGION || 'us-central1';
+  const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.GOOGLE_CLOUD_PROJECT;
+  if (!project) {
+    throw new functions.https.HttpsError('failed-precondition', 'Missing GOOGLE_CLOUD_PROJECT for Vertex AI');
+  }
+  const vertex = new VertexAI({ project, location });
+  const model = vertex.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 512,
+    },
+    systemInstruction: { parts: [{ text: system }] }
+  });
+
+  try {
+    const result = await model.generateContent({
+      contents: [
+        { role: 'user', parts: [{ text: user }]}
+      ],
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        { category: 'HARM_CATEGORY_SEXUAL', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        { category: 'HARM_CATEGORY_DANGEROUS', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+      ]
+    });
+    const text = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('Empty response');
+
+    // Strict JSON parse with validation
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // Try to extract JSON substring if model returned extra text
+      const match = text.match(/\{[\s\S]*\}$/);
+      parsed = match ? JSON.parse(match[0]) : null;
+    }
+    if (!parsed || !Array.isArray(parsed.steps) || !Array.isArray(parsed.affirmations) || !Array.isArray(parsed.templates)) {
+      throw new Error('Invalid JSON output');
+    }
+
+    // Clamp sizes and sanitize outputs
+    const steps = parsed.steps.slice(0, 5).map((s: any) => ({
+      title: sanitizeText(String(s?.title || 'Step')),
+      detail: sanitizeText(String(s?.detail || '')),
+    }));
+    const affirmations = parsed.affirmations.slice(0, 5).map((a: any) => sanitizeText(String(a || '')));
+    const templates = parsed.templates.slice(0, 2).map((t: any) => ({
+      label: sanitizeText(String(t?.label || '')), text: sanitizeText(String(t?.text || '')),
+    }));
+
+    return { steps, affirmations, templates };
+  } catch (err: any) {
+    console.error('generateRecoveryPlan error', err);
+    throw new functions.https.HttpsError('internal', 'AI generation failed');
+  }
 });
