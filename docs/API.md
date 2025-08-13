@@ -13,6 +13,8 @@
   - Deletes user subcollections, images, user doc, Auth user
 - `backfillCommunityStatus()` [admin]
   - Sets `status: 'visible'` on recent posts lacking it
+- `generateRecoveryPlan({ type: 'dating'|'job'|'social'|'academic'|'other', impact: 0..10, note?: string, tone?: 'gentle'|'direct' })` → `{ steps: {title, detail}[], affirmations: string[], templates: {label, text}[] }`
+  - Uses Vertex AI (Gemini) with safety filters and rate-limiting
 
 ## Triggers & schedules
 - Firestore: `onRejectionCreate` aggregates, server patterns, optional FCM
