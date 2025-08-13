@@ -18,11 +18,15 @@ struct DashboardView: View {
                         SkeletonView(height: 140, cornerRadius: 16)
                     } else {
                         ResilienceRing(score: analyticsManager.currentResilienceScore)
+                            .resilientCard()
                         WeeklyStatsCard(stats: analyticsManager.weeklyStats)
+                            .resilientCard()
                         if !patterns.isEmpty {
                             PatternAlertsCard(patterns: patterns)
+                                .resilientCard()
                         }
                         RecoveryTrendsChart(points: analyticsManager.recoveryTrend)
+                            .resilientCard()
                     }
                 }
                 .padding()

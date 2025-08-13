@@ -18,7 +18,9 @@ struct HistoryView: View {
                         Text("No logs yet.").font(.resilientHeadline)
                         Text("Your story starts when you log your first rejection.").font(.resilientBody).foregroundColor(.secondary)
                         ResilientButton(title: "Log one now", style: .primary) { }
-                    }.padding()
+                    }
+                    .resilientCard()
+                    .padding()
                 } else {
                     List(entries) { entry in
                     VStack(alignment: .leading, spacing: 4) {

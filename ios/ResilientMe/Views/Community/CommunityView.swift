@@ -29,6 +29,7 @@ struct CommunityView: View {
                         Text("Share your first story. Someone will relate.").font(.resilientBody).foregroundColor(.secondary)
                         ResilientButton(title: "Share a story", style: .primary) { showingSubmission = true }
                     }
+                    .resilientCard()
                     .padding()
                 } else {
                     List {
