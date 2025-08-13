@@ -6,6 +6,7 @@ import FirebaseFirestore
 struct HistoryView: View {
     @State private var entries: [RejectionEntry] = []
     @State private var errorMessage: String? = nil
+    @State private var editing: RejectionEntry? = nil
 
     var body: some View {
         NavigationView {
@@ -50,6 +51,10 @@ struct HistoryView: View {
                                 }
                             }
                         }
+                        HStack {
+                            Button("Edit") { editing = entry }
+                            Spacer()
+                        }
                     }
                     .padding(.vertical, 6)
                     .accessibilityElement(children: .combine)
@@ -63,6 +68,24 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .onAppear { AnalyticsManager.trackScreenView("History"); loadHistory() }
+            .sheet(item: $editing) { e in
+                EditEntryView(entry: e) { updated in
+                    RejectionManager.shared.update(id: updated.id, type: updated.type, emotionalImpact: updated.emotionalImpact, note: updated.note)
+                    #if canImport(FirebaseFirestore)
+                    if FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid {
+                        let db = Firestore.firestore()
+                        let doc = db.collection("users").document(uid).collection("rejections").document(updated.id.uuidString)
+                        var payload: [String: Any] = [
+                            "type": updated.type.rawValue,
+                            "emotionalImpact": updated.emotionalImpact,
+                            "note": updated.note as Any
+                        ]
+                        doc.setData(payload, merge: true)
+                    }
+                    #endif
+                    loadHistory()
+                }
+            }
         }
         .background(Color.resilientBackground.ignoresSafeArea())
     }
@@ -107,6 +130,27 @@ struct HistoryView: View {
         #endif
         RejectionManager.shared.delete(id: entry.id)
         loadHistory()
+    }
+}
+
+struct EditEntryView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State var entry: RejectionEntry
+    var onSave: (RejectionEntry) -> Void
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Picker("Type", selection: $entry.type) { ForEach(RejectionType.allCases) { Text($0.displayTitle).tag($0) } }
+                Slider(value: $entry.emotionalImpact, in: 1...10, step: 1)
+                TextField("Note", text: Binding(get: { entry.note ?? "" }, set: { entry.note = $0.isEmpty ? nil : $0 }))
+            }
+            .navigationTitle("Edit Entry")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("Save") { onSave(entry); dismiss() } }
+            }
+        }
     }
 }
 

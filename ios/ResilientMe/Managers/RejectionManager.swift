@@ -28,6 +28,20 @@ final class RejectionManager: ObservableObject {
         FirestoreSyncService.shared.save(entry: entry)
     }
 
+    func update(id: UUID, type: RejectionType, emotionalImpact: Double, note: String?) {
+        let bg = CoreDataStack.shared.newBackgroundContext()
+        bg.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "RejectionCD")
+            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            if let obj = try? bg.fetch(request).first {
+                obj.setValue(type.rawValue, forKey: "type")
+                obj.setValue(emotionalImpact, forKey: "emotionalImpact")
+                obj.setValue(note, forKey: "note")
+                do { try bg.save() } catch { print("Core Data update error: \(error)") }
+            }
+        }
+    }
+
     func delete(id: UUID) {
         let bg = CoreDataStack.shared.newBackgroundContext()
         bg.perform {
