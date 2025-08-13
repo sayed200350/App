@@ -12,7 +12,7 @@ struct HistoryView: View {
                 List(entries) { entry in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .top, spacing: 12) {
-                        if let url = (entry as AnyObject).value(forKey: "imageUrl") as? String, let u = URL(string: url) {
+                        if let url = entry.imageUrl, let u = URL(string: url) {
                             AsyncImage(url: u) { phase in
                                 switch phase {
                                 case .empty: ProgressView().frame(width: 54, height: 54)
@@ -66,10 +66,7 @@ struct HistoryView: View {
                               let impact = data["emotionalImpact"] as? Double,
                               let ts = data["timestamp"] as? Timestamp else { return nil }
                         let note = data["note"] as? String
-                        var e = RejectionEntry(id: UUID(uuidString: d.documentID) ?? UUID(), type: type, emotionalImpact: impact, note: note, timestamp: ts.dateValue())
-                        // Attach imageUrl dynamically for UI via KVC to avoid changing model
-                        (e as AnyObject).setValue(data["imageUrl"], forKey: "imageUrl")
-                        return e
+                        return RejectionEntry(id: UUID(uuidString: d.documentID) ?? UUID(), type: type, emotionalImpact: impact, note: note, timestamp: ts.dateValue(), imageUrl: data["imageUrl"] as? String)
                     }
                     self.entries = mapped
                 } else {

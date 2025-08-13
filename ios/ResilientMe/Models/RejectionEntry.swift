@@ -6,6 +6,7 @@ struct RejectionEntry: Identifiable {
     let emotionalImpact: Double
     let note: String?
     let timestamp: Date
+    var imageUrl: String?
 }
 
 

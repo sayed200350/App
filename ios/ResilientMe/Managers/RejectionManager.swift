@@ -55,7 +55,7 @@ final class RejectionManager: ObservableObject {
                 else { return nil }
                 let impact = obj.value(forKey: "emotionalImpact") as? Double ?? 0
                 let note = obj.value(forKey: "note") as? String
-                return RejectionEntry(id: id, type: type, emotionalImpact: impact, note: note, timestamp: ts)
+                return RejectionEntry(id: id, type: type, emotionalImpact: impact, note: note, timestamp: ts, imageUrl: nil)
             }
         } catch {
             print("Core Data fetch error: \(error)")

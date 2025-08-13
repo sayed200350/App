@@ -5,6 +5,7 @@ admin.initializeApp();
 
 const db = admin.firestore();
 const auth = admin.auth();
+const storage = admin.storage();
 
 // Utilities
 const sanitizeText = (input: string): string => {
@@ -180,6 +181,7 @@ export const createCommunityPost = functions.https.onCall(async (data, context) 
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     reactions: {},
     authorUid: uid,
+    status: 'visible',
   });
   return { id: doc.id };
 });
@@ -259,6 +261,20 @@ export const requestDataExport = functions.https.onCall(async (_data, context) =
   return payload;
 });
 
+// Trigger: When a rejection is deleted, remove attached image from Storage if present
+export const onRejectionDelete = functions.firestore
+  .document('users/{uid}/rejections/{id}')
+  .onDelete(async (snap, context) => {
+    const uid = context.params.uid as string;
+    const id = context.params.id as string;
+    const path = `rejection_images/${uid}/${id}.jpg`;
+    try {
+      await storage.bucket().file(path).delete({ ignoreNotFound: true });
+    } catch (e) {
+      console.error('Storage delete error', e);
+    }
+  });
+
 // Callable: Request account deletion (scrub PII, delete subcollections)
 export const requestAccountDeletion = functions.https.onCall(async (_data, context) => {
   const uid = ensureAuthed(context);
@@ -267,6 +283,13 @@ export const requestAccountDeletion = functions.https.onCall(async (_data, conte
   const userRef = db.collection('users').doc(uid);
   const rejections = await userRef.collection('rejections').listDocuments();
   const challenges = await userRef.collection('challenges').listDocuments();
+
+  // Delete associated Storage images for rejections
+  for (const doc of rejections) {
+    const path = `rejection_images/${uid}/${doc.id}.jpg`;
+    try { await storage.bucket().file(path).delete({ ignoreNotFound: true }); } catch {}
+  }
+
   const batches: FirebaseFirestore.WriteBatch[] = [];
   let batch = db.batch();
   let count = 0;

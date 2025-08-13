@@ -32,7 +32,7 @@ final class CommunityManager: ObservableObject {
         #if canImport(FirebaseFirestore)
         guard FirebaseManager.shared.isConfigured else { return }
         let db = Firestore.firestore()
-        let snapshot = try? await db.collection("community").order(by: "createdAt", descending: true).limit(to: 100).getDocuments()
+        let snapshot = try? await db.collection("community").whereField("status", isEqualTo: "visible").order(by: "createdAt", descending: true).limit(to: 100).getDocuments()
         let list: [CommunityStory] = snapshot?.documents.compactMap { doc in
             let data = doc.data()
             guard let typeRaw = data["type"] as? String,
