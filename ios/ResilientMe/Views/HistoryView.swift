@@ -7,6 +7,7 @@ struct HistoryView: View {
     @State private var entries: [RejectionEntry] = []
     @State private var errorMessage: String? = nil
     @State private var editing: RejectionEntry? = nil
+    @State private var isLoading: Bool = false
 
     var body: some View {
         NavigationView {
@@ -14,7 +15,11 @@ struct HistoryView: View {
                 if let error = errorMessage {
                     Text(error).font(.footnote).foregroundColor(.white).padding(8).frame(maxWidth: .infinity).background(Color.red.opacity(0.8)).cornerRadius(8).padding([.horizontal, .top])
                 }
-                if entries.isEmpty {
+                if isLoading {
+                    VStack(spacing: 12) {
+                        ForEach(0..<6) { _ in SkeletonView(height: 82, cornerRadius: 12) }
+                    }.padding()
+                } else if entries.isEmpty {
                     VStack(spacing: 12) {
                         Text("No logs yet.").font(.resilientHeadline)
                         Text("Your story starts when you log your first rejection.").font(.resilientBody).foregroundColor(.secondary)
@@ -93,9 +98,10 @@ struct HistoryView: View {
     private func loadHistory() {
         #if canImport(FirebaseFirestore)
         if FirebaseManager.shared.isConfigured, let uid = FirebaseManager.shared.currentUser?.uid {
+            isLoading = true
             let db = Firestore.firestore()
             db.collection("users").document(uid).collection("rejections").order(by: "timestamp", descending: true).limit(to: 50).getDocuments { snap, err in
-                if let err = err { self.errorMessage = err.localizedDescription; return }
+                if let err = err { self.errorMessage = err.localizedDescription; self.isLoading = false; return }
                 if let docs = snap?.documents {
                     let mapped: [RejectionEntry] = docs.compactMap { d in
                         let data = d.data()
@@ -110,6 +116,7 @@ struct HistoryView: View {
                 } else {
                     self.entries = RejectionManager.shared.recent(days: 30)
                 }
+                self.isLoading = false
             }
             return
         }

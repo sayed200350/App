@@ -6,6 +6,7 @@ import FirebaseFirestore
 struct ChallengeView: View {
     @StateObject private var manager = ChallengeManager()
     @State private var challenge: Challenge?
+    @State private var showingShare = false
 
     var body: some View {
         NavigationView {
@@ -29,6 +30,7 @@ struct ChallengeView: View {
                         ResilientButton(title: "Complete", style: .primary) {
                             manager.markCompleted(c)
                             AnalyticsManager.trackChallengeComplete()
+                            showingShare = true
                             loadChallenge()
                         }
                         ResilientButton(title: "Skip", style: .secondary) {
@@ -50,6 +52,10 @@ struct ChallengeView: View {
             .padding()
             .navigationTitle("Today's Challenge")
             .onAppear { loadChallenge() }
+            .sheet(isPresented: $showingShare) {
+                let text = "I just completed today’s resilience challenge on ResilientMe!"
+                ShareSheet(items: [text])
+            }
         }
     }
 
