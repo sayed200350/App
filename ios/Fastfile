@@ -1,0 +1,23 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Run unit tests"
+  lane :test do
+    scan(
+      project: "ResilientMe.xcodeproj",
+      scheme: "ResilientMe",
+      clean: true,
+      devices: ["iPhone 15"]
+    )
+  end
+
+  desc "Build for testing"
+  lane :build do
+    gym(
+      project: "ResilientMe.xcodeproj",
+      scheme: "ResilientMe",
+      configuration: "Debug",
+      skip_package_ipa: true
+    )
+  end
+end

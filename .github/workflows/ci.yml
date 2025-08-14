@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Firebase Tools
+        run: npm i -g firebase-tools
+      - name: Install deps
+        working-directory: functions
+        run: npm ci
+      - name: Build
+        working-directory: functions
+        run: npm run build
+      - name: Test (Rules on Emulator)
+        working-directory: functions
+        env:
+          CI: true
+        run: npm test
