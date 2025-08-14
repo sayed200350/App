@@ -227,7 +227,7 @@
         "description": "Create staging Firebase project and local Emulator Suite for Auth/Firestore/Functions/Storage.",
         "details": "- Create Firebase project 'resilientme-staging'\n- Enable Auth (Email link, Anonymous), Firestore, Storage, FCM\n- Initialize repo configs: .firebaserc, firebase.json, firestore.indexes.json, firestore.rules\n- Configure Emulator Suite ports and UI\n- Add staging GoogleService-Info.plist and switchable build config",
         "testStrategy": "Emulators boot, sample read/write works, app points to staging plist and connects",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -249,7 +249,7 @@
         "description": "Implement onCreate trigger to update aggregates, recompute resilience score, and schedule follow-up notifications.",
         "details": "- onCreate users/{uid}/rejections/{id}\n- Update daily/weekly aggregate docs\n- Compute resilience score\n- Schedule 24h follow-up (FCM)",
         "testStrategy": "Function unit tests with emulator; aggregates updated; notification enqueued",
-        "status": "pending",
+        "status": "done",
         "dependencies": [21,22],
         "priority": "high",
         "subtasks": []
@@ -326,7 +326,7 @@
         "description": "Register device tokens, handle notification taps, schedule reminders via Functions.",
         "details": "- Save token under users/{uid}\n- Handle deep-links from notifications\n- Verify schedules in emulator",
         "testStrategy": "Token registered; push received; open tracked; schedules fire in emulator",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [21,23],
         "priority": "medium",
         "subtasks": []
@@ -348,7 +348,7 @@
         "description": "Define analytics schema and wire events across app.",
         "details": "- Events: rejection_log, challenge_complete, community_post, reaction_add, notification_open\n- Parameter schema and validation",
         "testStrategy": "Events visible in DebugView; params as designed",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [21],
         "priority": "medium",
         "subtasks": []

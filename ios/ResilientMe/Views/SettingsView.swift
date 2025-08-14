@@ -59,6 +59,10 @@ struct SettingsView: View {
                         NotificationManager.shared.requestPermission()
                         status = "Notification permission requested"
                     }
+                    Button("Register FCM Token") {
+                        NotificationManager.shared.registerFCMToken()
+                        status = "Requested FCM token registration"
+                    }
                     Button("Schedule Daily Check-in (8 PM)") {
                         NotificationManager.shared.scheduleDailyCheckIn(hour: 20)
                         status = "Daily check-in scheduled"

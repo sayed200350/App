@@ -3,6 +3,12 @@ import Foundation
 #if canImport(FirebaseFirestore)
 import FirebaseFirestore
 #endif
+#if canImport(FirebaseAnalytics)
+import FirebaseAnalytics
+#endif
+#if canImport(FirebaseFunctions)
+import FirebaseFunctions
+#endif
 
 struct CommunityStory: Identifiable, Codable {
     let id: String
@@ -51,26 +57,26 @@ final class CommunityManager: ObservableObject {
     }
 
     func addReaction(to story: CommunityStory, reaction: Reaction) {
-        #if canImport(FirebaseFirestore)
-        guard FirebaseManager.shared.isConfigured else { return }
-        let db = Firestore.firestore()
-        let ref = db.collection("community").document(story.id)
-        let key = reaction.rawValue
-        ref.setData(["reactions.\(key)": FieldValue.increment(Int64(1))], merge: true)
+        #if canImport(FirebaseFunctions)
+        let params: [String: Any] = ["postId": story.id, "reaction": reaction.rawValue]
+        Functions.functions().httpsCallable("reactToPost").call(params) { _, error in
+            if let error = error { print("[Functions] reactToPost error: \(error)") }
+        }
+        #endif
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent("reaction_add", parameters: ["reaction": reaction.rawValue])
         #endif
     }
 
     func submitStory(type: RejectionType, content: String) async throws {
-        #if canImport(FirebaseFirestore)
-        guard FirebaseManager.shared.isConfigured else { return }
-        let db = Firestore.firestore()
-        let payload: [String: Any] = [
-            "type": type.rawValue,
-            "content": content,
-            "createdAt": Timestamp(date: Date()),
-            "reactions": [:]
-        ]
-        _ = try await db.collection("community").addDocument(data: payload)
+        #if canImport(FirebaseFunctions)
+        let params: [String: Any] = ["type": type.rawValue, "content": content]
+        do { _ = try await Functions.functions().httpsCallable("submitPost").call(params) } catch {
+            print("[Functions] submitPost error: \(error)")
+        }
+        #endif
+        #if canImport(FirebaseAnalytics)
+        Analytics.logEvent("community_post", parameters: ["type": type.rawValue])
         #endif
     }
 }

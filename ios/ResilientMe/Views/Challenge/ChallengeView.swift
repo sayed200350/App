@@ -1,5 +1,9 @@
 import SwiftUI
 
+#if canImport(FirebaseAnalytics)
+import FirebaseAnalytics
+#endif
+
 struct ChallengeView: View {
     @StateObject private var manager = ChallengeManager()
     @State private var challenge: Challenge?
@@ -25,6 +29,12 @@ struct ChallengeView: View {
                     HStack {
                         ResilientButton(title: "Complete", style: .primary) {
                             manager.markCompleted(c)
+                            #if canImport(FirebaseAnalytics)
+                            Analytics.logEvent("challenge_complete", parameters: [
+                                "type": c.type.rawValue,
+                                "points": c.points
+                            ])
+                            #endif
                             challenge = manager.getTodaysChallenge()
                         }
                         ResilientButton(title: "Skip", style: .secondary) {
